@@ -1,0 +1,3 @@
+[submodule "libs/intel_sat_solver"]
+	path = libs/intel_sat_solver
+	url = https://github.com/alexander-nadel/intel_sat_solver.git
