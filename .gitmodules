@@ -1,3 +1,6 @@
 [submodule "libs/intel_sat_solver"]
 	path = libs/intel_sat_solver
 	url = https://github.com/alexander-nadel/intel_sat_solver.git
+[submodule "libs/lorina"]
+	path = libs/lorina
+	url = https://github.com/hriener/lorina.git
