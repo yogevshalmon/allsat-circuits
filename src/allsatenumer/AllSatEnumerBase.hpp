@@ -5,6 +5,7 @@
 #include "Topor.hpp"
 #include "AllSatGloblas.hpp"
 #include "AigerParser.hpp"
+#include "InputParser.hpp"
 
 using namespace Topor;
 using namespace std;
@@ -17,15 +18,20 @@ class AllSatEnumerBase
 {
     public:
 
-        AllSatEnumerBase(bool useRep, double toporMode, bool printEnumer = false):
-        m_WithRep(useRep), m_PrintEnumer(printEnumer),
+        AllSatEnumerBase(const InputParser& inputParser):
+        // default is with rep
+        m_WithRep(!inputParser.cmdOptionExists("--no_rep")),
+        // default is not printing
+        m_PrintEnumer(inputParser.cmdOptionExists("--print_model")),
+        // default is mode 5
+        m_ToporMode(inputParser.getUintCmdOption("-topor_mode", 5)),
 		m_Solver(nullptr), m_NumberOfAssg(0), m_NumberOfModels(0)
         {
 			m_Clk = clock();
             m_Solver = new CTopor();
 
             m_Solver->SetParam("/verbosity/level",(double)0);
-            m_Solver->SetParam("/mode/value",(double)toporMode);
+            m_Solver->SetParam("/mode/value",(double)m_ToporMode);
         }
 
         virtual void InitializeSolver(string filename) { throw runtime_error("Function not implemented"); };
@@ -140,6 +146,7 @@ class AllSatEnumerBase
 
         bool m_WithRep;
         bool m_PrintEnumer;
+        unsigned m_ToporMode;
 
         AigerParser m_AigParser;
         CTopor* m_Solver;

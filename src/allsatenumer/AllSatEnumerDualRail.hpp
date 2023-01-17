@@ -10,7 +10,7 @@ using namespace std;
 class AllSatEnumerDualRail : public AllSatEnumerBase
 {
     public:
-        AllSatEnumerDualRail(bool useRep, double toporMode, bool printEnumer) : AllSatEnumerBase(useRep, toporMode, printEnumer)
+        AllSatEnumerDualRail(const InputParser& inputParser) : AllSatEnumerBase(inputParser)
         {
 
         }
