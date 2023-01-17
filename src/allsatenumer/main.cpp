@@ -1,17 +1,26 @@
 #include <iostream>
-#include <fstream>
-#include <cassert>
-#include <filesystem>
 #include <vector>
-#include <array>
-#include <string>
-#include <filesystem>
-#include <cstring>
+#include <signal.h>
 
 #include "AllSatGloblas.hpp"
 #include "AllSatEnumerDualRail.hpp"
 
 using namespace std;
+
+// define global algo for sigHandling
+AllSatEnumerBase* allSatAlgo = nullptr;
+
+// function for handling sig
+// just print the result with wasInterrupted = true
+void sigHandler(int s){
+    printf("Caught signal %d\n",s);
+    if(allSatAlgo != nullptr)
+    {
+        allSatAlgo->PrintResult(true);
+        delete allSatAlgo;
+    }
+    exit(1); 
+}
 
 int main(int argc, char **argv) 
 {
@@ -75,9 +84,17 @@ int main(int argc, char **argv)
               
     }
 
-    AllSatEnumerBase* allSatAlgo = nullptr;
-
 	allSatAlgo = new AllSatEnumerDualRail(w_rep, topor_mode, printEnumer);
+
+    // define sigaction for catchin ctr+c etc..
+    struct sigaction sigIntHandler;
+
+    sigIntHandler.sa_handler = sigHandler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+
+    sigaction(SIGINT, &sigIntHandler, NULL);
+
 
     try
     { 

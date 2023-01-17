@@ -32,12 +32,26 @@ class AllSatEnumerBase
 
         virtual void FindAllEnumer() { throw runtime_error("Function not implemented"); };
 
-        void PrintResult()
+        void PrintResult(bool wasInterrupted = false)
         {
 			unsigned long cpu_time =  clock() - m_Clk;
             double Time = (double)(cpu_time)/(double)(CLOCKS_PER_SEC);
-            cout << "c Number of assignments: " << m_NumberOfAssg << endl;
-            cout << "c Number of models: " << m_NumberOfModels << endl;
+            if (wasInterrupted)
+            {
+                cout << "c *** Interrupted *** " << endl;
+            }
+            cout << "c Number of assignments: " << m_NumberOfAssg;
+            if (wasInterrupted)
+            {
+                cout << "+";
+            }
+            cout << endl;
+            cout << "c Number of models: " << m_NumberOfModels;
+            if (wasInterrupted)
+            {
+                cout << "+";
+            }
+            cout << endl;
             cout << "c cpu time (solve)  : " << Time <<" sec" << endl;
         }
 

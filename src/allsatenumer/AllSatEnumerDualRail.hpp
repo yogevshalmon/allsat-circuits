@@ -61,29 +61,29 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
             const vector<AIGLIT>& outputs = m_AigParser.GetOutputs();
             // TODO can assert different things on the output
 
-            for(AIGLIT aigOutput : outputs)
-            {
-                DRVAR outdr = GetDualFromAigLit(aigOutput);
-                // assert that the dr encoding is pos = 1, neg = 0
-                m_Solver->AddClause(GetPos(outdr));
-                m_Solver->AddClause(-GetNeg(outdr));
-            }
-            
-            // SATLIT maxLit = (SATLIT)isIndexRef.size() + 1;
-            // vector<SATLIT> outputsIsPos;
-
             // for(AIGLIT aigOutput : outputs)
             // {
-            //     // create and for output is pos
             //     DRVAR outdr = GetDualFromAigLit(aigOutput);
-            //     WriteAnd(maxLit, GetPos(outdr), -GetNeg(outdr));
-            //     outputsIsPos.push_back(maxLit);
-            //     maxLit++;
+            //     // assert that the dr encoding is pos = 1, neg = 0
+            //     m_Solver->AddClause(GetPos(outdr));
+            //     m_Solver->AddClause(-GetNeg(outdr));
             // }
+            
+            SATLIT maxLit = (SATLIT)((isIndexRef.size()+1)*2);
+            vector<SATLIT> outputsIsPos;
 
-            // // now assert clause of outputsIsPos meaning one of the output must be 1
+            for(AIGLIT aigOutput : outputs)
+            {
+                // create and for output is pos
+                DRVAR outdr = GetDualFromAigLit(aigOutput);
+                WriteAnd(maxLit, GetPos(outdr), -GetNeg(outdr));
+                outputsIsPos.push_back(maxLit);
+                maxLit++;
+            }
 
-            // m_Solver->AddClause(outputsIsPos);
+            // now assert clause of outputsIsPos meaning one of the output must be 1
+
+            m_Solver->AddClause(outputsIsPos);
         }
 
         void FindAllEnumer()
