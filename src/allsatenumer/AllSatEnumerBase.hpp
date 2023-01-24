@@ -14,6 +14,9 @@ static constexpr int ToporBadRetVal = -1;
 static constexpr int ToporSatRetVal = 10;
 static constexpr int ToporUnSatRetVal = 20;
 
+static constexpr SATLIT CONST_LIT_TRUE = 1;
+static constexpr SATLIT CONST_LIT_FALSE = -1;
+
 class AllSatEnumerBase 
 {
     public:

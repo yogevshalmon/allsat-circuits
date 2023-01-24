@@ -19,6 +19,8 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
         {
             ParseAigFile(filename);
 
+            m_Solver->AddClause(CONST_LIT_TRUE);
+
             for(const AigAndGate& gate : m_AigParser.GetAndGated())
             {
                 HandleAndGate(gate);
@@ -61,29 +63,29 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
             const vector<AIGLIT>& outputs = m_AigParser.GetOutputs();
             // TODO can assert different things on the output
 
-            // for(AIGLIT aigOutput : outputs)
-            // {
-            //     DRVAR outdr = GetDualFromAigLit(aigOutput);
-            //     // assert that the dr encoding is pos = 1, neg = 0
-            //     m_Solver->AddClause(GetPos(outdr));
-            //     m_Solver->AddClause(-GetNeg(outdr));
-            // }
-            
-            SATLIT maxLit = (SATLIT)((isIndexRef.size()+1)*2);
-            vector<SATLIT> outputsIsPos;
-
             for(AIGLIT aigOutput : outputs)
             {
-                // create and for output is pos
                 DRVAR outdr = GetDualFromAigLit(aigOutput);
-                WriteAnd(maxLit, GetPos(outdr), -GetNeg(outdr));
-                outputsIsPos.push_back(maxLit);
-                maxLit++;
+                // assert that the dr encoding is pos = 1, neg = 0
+                m_Solver->AddClause(GetPos(outdr));
+                m_Solver->AddClause(-GetNeg(outdr));
             }
+            
+            // SATLIT maxLit = (SATLIT)((isIndexRef.size()+1)*2);
+            // vector<SATLIT> outputsIsPos;
 
-            // now assert clause of outputsIsPos meaning one of the output must be 1
+            // for(AIGLIT aigOutput : outputs)
+            // {
+            //     // create and for output is pos
+            //     DRVAR outdr = GetDualFromAigLit(aigOutput);
+            //     WriteAnd(maxLit, GetPos(outdr), -GetNeg(outdr));
+            //     outputsIsPos.push_back(maxLit);
+            //     maxLit++;
+            // }
 
-            m_Solver->AddClause(outputsIsPos);
+            // // now assert clause of outputsIsPos meaning one of the output must be 1
+
+            // m_Solver->AddClause(outputsIsPos);
         }
 
         void FindAllEnumer()
@@ -120,6 +122,11 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
 		// else odd i.e. 3 return 3,2
         DRVAR GetDualFromAigLit(const AIGLIT& var)
         {
+            // special case for constant TRUE\FALSE
+            if( var == 0)
+                return {CONST_LIT_FALSE, CONST_LIT_TRUE};
+            if( var == 1)
+                return {CONST_LIT_TRUE, CONST_LIT_FALSE};
 			// even
 			if( (var & 1) == 0)
             	return {var, var + 1};
@@ -179,6 +186,11 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
             return numOfDontCares;
         }
 
+        inline static AIGINDEX DRToAIGIndex(const DRVAR& drvar)
+        {
+            return AIGLitToAIGIndex(((AIGLIT)GetPos(drvar)));
+        }
+
         void printEnumr()
         {
             for (const DRVAR& inputdr : m_InputsDR)
@@ -188,9 +200,7 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
                 auto is_neg = m_Solver->GetLitValue(var_neg) == TToporLitVal::VAL_SATISFIED;
 
                 // TODO here handle the case inputdr is inserted negated? -> shouldnt happen
-                // var_pos is the aig lit 
-
-                auto lit_index = var_pos/2;
+                AIGINDEX lit_index = DRToAIGIndex(inputdr);
 
                 if (is_pos)
                 {
@@ -198,7 +208,7 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
                 }
                 else if (is_neg)
                 {
-                    cout << -lit_index << " ";
+                    cout << "-" << lit_index << " ";
                 }
                 else
                 { // Dont care case

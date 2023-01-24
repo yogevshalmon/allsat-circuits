@@ -3,6 +3,7 @@
 
 #include "AllSatGloblas.hpp"
 #include "AllSatEnumerDualRail.hpp"
+#include "AllSatEnumerTernarySim.hpp"
 
 using namespace std;
 
@@ -23,8 +24,9 @@ void sigHandler(int s){
 
 void PrintUsage()
 {
-    cout << "USAGE: ./allsatenumr-aig <input_file_name> <--no_rep> <--print_model> <-topor_mode value>" << endl;
+    cout << "USAGE: ./allsatenumr-aig <input_file_name> <--use_tersim> <--no_rep> <--print_model> <-topor_mode value>" << endl;
     cout << "where <input_file_name> is the path to a aag instance in Aiger format" << endl;
+    cout << "where <--use_tersim> if to use teranry simulation mode" << endl;
     cout << "where <--no_rep> represent if to not use repetition" << endl;
     cout << "where <--print_model> represent if to print the enumerations found" << endl;
     cout << "where <-topor_mode value> represent the topor mode" << endl;
@@ -43,7 +45,27 @@ int main(int argc, char **argv)
         return 1;
     }
 
-	allSatAlgo = new AllSatEnumerDualRail(cmdInput);
+    bool useTerSim = cmdInput.cmdOptionExists("--use_tersim");
+
+    try
+    { 
+        if (useTerSim)
+        {
+ 	        allSatAlgo = new AllSatEnumerTernarySim(cmdInput);
+        }
+        else
+        {
+            allSatAlgo = new AllSatEnumerDualRail(cmdInput);
+        }
+        allSatAlgo->InitializeSolver(argv[1]);    
+    }
+    catch (exception& ex)
+    {
+        delete allSatAlgo;
+        cout << "Error while initilize the solver: " << ex.what() << endl;
+        return -1;
+    }
+
 
     // define sigaction for catchin ctr+c etc..
     struct sigaction sigIntHandler;
@@ -56,7 +78,6 @@ int main(int argc, char **argv)
 
     try
     { 
-        allSatAlgo->InitializeSolver(argv[1]);
         allSatAlgo->FindAllEnumer();
         allSatAlgo->PrintResult();
     }
