@@ -10,7 +10,12 @@ using namespace std;
 class AllSatEnumerDualRail : public AllSatEnumerBase
 {
     public:
-        AllSatEnumerDualRail(const InputParser& inputParser) : AllSatEnumerBase(inputParser)
+        AllSatEnumerDualRail(const InputParser& inputParser) : AllSatEnumerBase(inputParser) ,
+        // defualt is false
+        m_BlockNoRep(inputParser.cmdOptionExists("--dr_block_no_rep")),
+        // default is true
+        m_DoForcePol(!inputParser.cmdOptionExists("--dr_no_force_pol")),
+        m_DoBoost(!inputParser.cmdOptionExists("--dr_no_boost"))
         {
 
         }
@@ -18,6 +23,11 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
         void InitializeSolver(string filename)
         {
             ParseAigFile(filename);
+
+            if (m_UseTerSim)
+            {
+                m_TernarySimulation = new TernarySim(m_AigParser);
+            }
 
             m_Solver->AddClause(CONST_LIT_TRUE);
 
@@ -50,12 +60,18 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
             for(const DRVAR& drvar: m_InputsDR)
             {
                 // the fix polarity make max-sat approximation
-                m_Solver->FixPolarity(-GetPos(drvar));
-                m_Solver->FixPolarity(-GetNeg(drvar));
+                if (m_DoForcePol)
+                {                  
+                    m_Solver->FixPolarity(-GetPos(drvar));
+                    m_Solver->FixPolarity(-GetNeg(drvar));
+                }
 
                 // and bump score
-                m_Solver->BoostScore(abs(GetPos(drvar)));
-                m_Solver->BoostScore(abs(GetNeg(drvar)));
+                if (m_DoBoost)
+                {
+                    m_Solver->BoostScore(abs(GetPos(drvar)));
+                    m_Solver->BoostScore(abs(GetNeg(drvar)));
+                }
             }
             
              //TODO outputs should be size 1 ?
@@ -88,34 +104,9 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
             // m_Solver->AddClause(outputsIsPos);
         }
 
-        void FindAllEnumer()
-        {
-            int res = ToporBadRetVal;
-            res = SolveAndGetResult();
-   
-            while( res == ToporSatRetVal)
-            {
-                m_NumberOfAssg++;          
-                if (m_PrintEnumer)
-                {
-                    printEnumr();
-                }
-                unsigned numOfDontCares = EnforceSatEnumr();
-                m_NumberOfModels = m_NumberOfModels + (unsigned long long)pow(2,numOfDontCares);
-                res = SolveAndGetResult();      
-            }
-            // not unsat at the end
-            if (res != ToporUnSatRetVal)
-            {
-                throw runtime_error("Last call wasnt Unsat as expected");
-            }
-        };
-
         virtual ~AllSatEnumerDualRail(){}
 
     protected:
-
-        vector<DRVAR> m_InputsDR;
 
         // Get the two var represent the var_pos and var_neg from AIGLIT
         // if even i.e. 2 return 2,3
@@ -134,6 +125,16 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
 				return {var, var - 1};
         }
 
+        static AIGLIT DRToAIGLit(const DRVAR& drvar)
+        {
+            return (AIGLIT)GetPos(drvar);
+        }
+
+        static AIGINDEX DRToAIGIndex(const DRVAR& drvar)
+        {
+            return AIGLitToAIGIndex(((AIGLIT)GetPos(drvar)));
+        }
+
 		static constexpr SATLIT GetPos(const DRVAR& dvar)
 		{
 			return dvar.first;
@@ -143,6 +144,20 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
 		{
 			return dvar.second;
 		}
+
+        TVal GetTValFromDR(const DRVAR& dvar)
+        {
+            bool isPos = m_Solver->GetLitValue(dvar.first) == TToporLitVal::VAL_SATISFIED;
+            if (isPos)
+                return TVal::True;
+            bool isNeg = m_Solver->GetLitValue(dvar.second) == TToporLitVal::VAL_SATISFIED;
+            if (isNeg)
+                return TVal::False;
+            
+            // no true no false -> Dont care
+            // we block the true & false case
+            return TVal::DontCare;
+        }
 
 		void HandleAndGate(AigAndGate gate)
 		{
@@ -155,68 +170,86 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
 		}
 
         // return the number of dont cares
-        unsigned EnforceSatEnumr()
+        unsigned GetBlockingClause()
         {
             unsigned numOfDontCares = 0;
-            vector<SATLIT> blockingClause = {};
+            m_BlockingClause.clear();
+
+            if (m_UseTerSim)
+            {
+                vector<pair<AIGLIT, TVal>> inputValues(m_InputsDR.size());
+
+                transform(m_InputsDR.begin(), m_InputsDR.end(), inputValues.begin(), [&](const DRVAR& inputDR) -> pair<AIGLIT, TVal>
+                {
+                    return {DRToAIGLit(inputDR), GetTValFromDR(inputDR)};
+                });
+
+                //cout << "Before MaximizeDontCare" << endl;
+                m_TernarySimulation->MaximizeDontCare(inputValues);
+            }
 
             for (const DRVAR& inputdr : m_InputsDR)
             {
                 auto const &[var_pos, var_neg] = inputdr;
-                auto isPos = m_Solver->GetLitValue(var_pos) == TToporLitVal::VAL_SATISFIED;
-                auto isNeg = m_Solver->GetLitValue(var_neg) == TToporLitVal::VAL_SATISFIED;
 
-                if (isPos)
+                TVal currVal = m_UseTerSim ? m_TernarySimulation->GetValForLit(DRToAIGLit(inputdr)) : GetTValFromDR(inputdr);
+
+                if (currVal == TVal::True)
                 {
-                    blockingClause.push_back( m_WithRep ? -var_pos : var_neg);
+                    m_BlockingClause.push_back( !m_BlockNoRep ? -var_pos : var_neg);
                 }
-                else if (isNeg)
+                else if (currVal == TVal::False)
                 {
-                    blockingClause.push_back( m_WithRep ? -var_neg : var_pos);
+                    m_BlockingClause.push_back( !m_BlockNoRep ? -var_neg : var_pos);
                 }
-                else // dont care case
+                else if (currVal == TVal::DontCare) // dont care case
                 {
                     numOfDontCares++;
                 }
-
+                else
+                {
+                    throw runtime_error("Unkown value for input");
+                }
             }
 
-            m_Solver->AddClause(blockingClause);
-
             return numOfDontCares;
-        }
-
-        inline static AIGINDEX DRToAIGIndex(const DRVAR& drvar)
-        {
-            return AIGLitToAIGIndex(((AIGLIT)GetPos(drvar)));
         }
 
         void printEnumr()
         {
             for (const DRVAR& inputdr : m_InputsDR)
-            {
-                auto const &[var_pos, var_neg] = inputdr;
-                auto is_pos = m_Solver->GetLitValue(var_pos) == TToporLitVal::VAL_SATISFIED;
-                auto is_neg = m_Solver->GetLitValue(var_neg) == TToporLitVal::VAL_SATISFIED;
+            {          
+                TVal currVal = m_UseTerSim ? m_TernarySimulation->GetValForLit(DRToAIGLit(inputdr)) : GetTValFromDR(inputdr);
 
                 // TODO here handle the case inputdr is inserted negated? -> shouldnt happen
-                AIGINDEX lit_index = DRToAIGIndex(inputdr);
+                AIGINDEX litIndex = DRToAIGIndex(inputdr);
 
-                if (is_pos)
+                if (currVal == TVal::True)
                 {
-                    cout << lit_index << " ";
+                    cout << litIndex << " ";
                 }
-                else if (is_neg)
+                else if (currVal == TVal::False)
                 {
-                    cout << "-" << lit_index << " ";
+                    cout << "-" << litIndex << " ";
+                }
+                else if (currVal == TVal::DontCare) // dont care case
+                {
+                    cout << "x ";
                 }
                 else
-                { // Dont care case
-                    cout << "x ";
-                }    
+                {
+                    throw runtime_error("Unkown value for input");
+                }   
             }
                 
             cout << endl;
         }
 
+
+    
+    const bool m_BlockNoRep;
+    const bool m_DoBoost;
+    const bool m_DoForcePol;
+
+    vector<DRVAR> m_InputsDR;
 };

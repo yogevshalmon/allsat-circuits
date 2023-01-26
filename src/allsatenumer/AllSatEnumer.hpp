@@ -3,24 +3,26 @@
 #include <vector>
 
 #include "AllSatEnumerBase.hpp"
-#include "TernarySim.hpp"
 
 using namespace Topor;
 using namespace std;
 
-class AllSatEnumerTernarySim : public AllSatEnumerBase
+class AllSatEnumer : public AllSatEnumerBase
 {
     public:
-        AllSatEnumerTernarySim(const InputParser& inputParser) : AllSatEnumerBase(inputParser)
+        AllSatEnumer(const InputParser& inputParser) : AllSatEnumerBase(inputParser)
         {
-            m_TernarySimulation = nullptr;
+
         }
 
         void InitializeSolver(string filename)
         {
             ParseAigFile(filename);
 
-            m_TernarySimulation = new TernarySim(m_AigParser);
+            if (m_UseTerSim)
+            {
+                m_TernarySimulation = new TernarySim(m_AigParser);
+            }
 
             m_Solver->AddClause(CONST_LIT_TRUE);
 
@@ -66,38 +68,9 @@ class AllSatEnumerTernarySim : public AllSatEnumerBase
             // m_Solver->AddClause(outputsIsPos);
         }
 
-        void FindAllEnumer()
-        {
-            int res = ToporBadRetVal;
-            res = SolveAndGetResult();
-   
-            while( res == ToporSatRetVal)
-            {
-                m_NumberOfAssg++;          
-                unsigned numOfDontCares = EnforceSatEnumr();
-                if (m_PrintEnumer)
-                {
-                    printEnumr();
-                }
-                m_NumberOfModels = m_NumberOfModels + (unsigned long long)pow(2,numOfDontCares);
-                res = SolveAndGetResult();      
-            }
-            // not unsat at the end
-            if (res != ToporUnSatRetVal)
-            {
-                throw runtime_error("Last call wasnt Unsat as expected");
-            }
-        };
-
-        virtual ~AllSatEnumerTernarySim()
-        {
-            delete m_TernarySimulation;
-        }
+        virtual ~AllSatEnumer(){}
 
     protected:
-
-        vector<SATLIT> m_Inputs;
-        TernarySim* m_TernarySimulation;
 
         // return the sat lit for each AIG lit
         // defined as the correspond aig index + 1 
@@ -140,19 +113,19 @@ class AllSatEnumerTernarySim : public AllSatEnumerBase
 		}
 
         // return the number of dont cares
-        unsigned EnforceSatEnumr()
+        unsigned GetBlockingClause()
         {
             unsigned numOfDontCares = 0;
-            vector<SATLIT> blockingClause = {};
+            m_BlockingClause.clear();
 
             // use ternary simulation
-            if (m_WithRep)
+            if (m_UseTerSim)
             {
-                vector<pair<AIGLIT, bool>> inputValues(m_Inputs.size());
+                vector<pair<AIGLIT, TVal>> inputValues(m_Inputs.size());
 
-                transform(m_Inputs.begin(), m_Inputs.end(), inputValues.begin(), [&](const SATLIT inputSatLit) -> pair<AIGLIT, bool>
+                transform(m_Inputs.begin(), m_Inputs.end(), inputValues.begin(), [&](const SATLIT inputSatLit) -> pair<AIGLIT, TVal>
                 {
-                    return {AIGIndexToAIGLit(SATLitToAIGIndex(inputSatLit)), m_Solver->GetLitValue(inputSatLit) == TToporLitVal::VAL_SATISFIED};
+                    return {AIGIndexToAIGLit(SATLitToAIGIndex(inputSatLit)), m_Solver->GetLitValue(inputSatLit) == TToporLitVal::VAL_SATISFIED ? TVal::True : TVal::False};
                 });
 
                 //cout << "Before MaximizeDontCare" << endl;
@@ -161,16 +134,16 @@ class AllSatEnumerTernarySim : public AllSatEnumerBase
 
             for (const SATLIT input : m_Inputs)
             {
-                if (m_WithRep)
+                if (m_UseTerSim)
                 {
                     TVal val = m_TernarySimulation->GetValForIndex(SATLitToAIGIndex(input));
                     if (val == TVal::True)
                     {
-                        blockingClause.push_back(-input);
+                        m_BlockingClause.push_back(-input);
                     }
                     else if (val == TVal::False)
                     {
-                        blockingClause.push_back(input);
+                        m_BlockingClause.push_back(input);
                     }
                     else if (val == TVal::DontCare) // dont care case
                     {
@@ -178,7 +151,7 @@ class AllSatEnumerTernarySim : public AllSatEnumerBase
                     }
                     else
                     {
-                        throw runtime_error("Unkown value for input after maximize dont cares");
+                        throw runtime_error("Unkown value for input");
                     }
                 }
                 else // TODO check?
@@ -187,17 +160,14 @@ class AllSatEnumerTernarySim : public AllSatEnumerBase
                     auto isPos = m_Solver->GetLitValue(input) == TToporLitVal::VAL_SATISFIED;
                     if (isPos)
                     {
-                        blockingClause.push_back(-input);
+                        m_BlockingClause.push_back(-input);
                     }
                     else
                     {
-                        blockingClause.push_back(input);
+                        m_BlockingClause.push_back(input);
                     }
                 }
-
             }
-
-            m_Solver->AddClause(blockingClause);
 
             return numOfDontCares;
         }
@@ -207,7 +177,7 @@ class AllSatEnumerTernarySim : public AllSatEnumerBase
             for (const SATLIT& input : m_Inputs)
             {
                 AIGINDEX litIndex = SATLitToAIGIndex(input); 
-                if (m_WithRep)
+                if (m_UseTerSim)
                 {
                     TVal val = m_TernarySimulation->GetValForIndex(litIndex);
                     if (val == TVal::True)
@@ -224,7 +194,7 @@ class AllSatEnumerTernarySim : public AllSatEnumerBase
                     }
                     else
                     {
-                        throw runtime_error("Unkown value for input after maximize dont cares");
+                        throw runtime_error("Unkown value for input");
                     }
                 }
                 else // TODO check?
@@ -244,5 +214,7 @@ class AllSatEnumerTernarySim : public AllSatEnumerBase
                 
             cout << endl;
         }
+
+    vector<SATLIT> m_Inputs;
 
 };

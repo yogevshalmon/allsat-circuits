@@ -40,7 +40,7 @@ public:
     };
 
     // initialVal contain the values to start simulate from
-    void MaximizeDontCare(const vector<pair<AIGLIT, bool>>& initialValues)
+    void MaximizeDontCare(const vector<pair<AIGLIT, TVal>>& initialValues)
     {
         // clear values before new simulation
         m_IndexCurrVal.assign( m_IndexCurrVal.size(), TVal::UnKown);
@@ -50,7 +50,7 @@ public:
         for (const auto& initValPair : initialValues)
         {
             //cout << "AssignValForLit : " << initValPair.first << endl;
-            AssignValForLit(initValPair.first, initValPair.second ? TVal::True : TVal::False);
+            AssignValForLit(initValPair.first, initValPair.second);
         }
 
         vector<TVal> lastValidVal;
@@ -58,6 +58,11 @@ public:
         // now try to maximize the DC values
         for (const AIGLIT inputLit : m_Inputs)
         {
+            // in case already Dont care case, can come from AllSatEnumerDualRail
+            if (GetValForLit(inputLit) == TVal::DontCare)
+            {
+                continue;
+            }
             // save the last valid values vec until now
             lastValidVal = m_IndexCurrVal;
             AssignValForLit(inputLit, TVal::DontCare);
@@ -83,6 +88,11 @@ public:
 
     TVal GetValForLit(const AIGLIT lit)
     {
+        // special cases for const true\false
+        if (lit == 1)
+            return TVal::True;
+        if (lit == 0)
+            return TVal::False;
         AIGINDEX index = AIGLitToAIGIndex(lit);
         if (index >= m_IndexCurrVal.size())
         {

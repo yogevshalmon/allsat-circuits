@@ -3,7 +3,7 @@
 
 #include "AllSatGloblas.hpp"
 #include "AllSatEnumerDualRail.hpp"
-#include "AllSatEnumerTernarySim.hpp"
+#include "AllSatEnumer.hpp"
 
 using namespace std;
 
@@ -24,14 +24,14 @@ void sigHandler(int s){
 
 void PrintUsage()
 {
-    cout << "USAGE: ./allsatenumr-aig <input_file_name> <--use_tersim> <--no_rep> <--print_model> <-topor_mode value>" << endl;
+    cout << "USAGE: ./allsatenumr-aig <input_file_name> <--use_tersim> <--dr_block_no_rep> <--print_model> <-satsolver_mode value>" << endl;
     cout << "where <input_file_name> is the path to a aag instance in Aiger format" << endl;
     cout << "where <--use_tersim> if to use teranry simulation mode" << endl;
     cout << "where <--no_rep> represent if to not use repetition" << endl;
     cout << "where <--print_model> represent if to print the enumerations found" << endl;
-    cout << "where <-topor_mode value> represent the topor mode" << endl;
+    cout << "where <-satsolver_mode value> represent the sat solver mode" << endl;
     cout << "\t Accepeted Values: [0,1,2,3,4,5,6,7] \n\t defualt value: 5" << endl;
-    cout << "Runnig example: \n\t ./allsatenumer-aig ../benchmarks/halfadder.aag --no_rep -topor_mode 6" << endl;
+    cout << "Runnig example: \n\t ./allsatenumer-aig ../benchmarks/halfadder.aag --no_rep -satsolver_mode 6" << endl;
 }
 
 
@@ -45,13 +45,13 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    bool useTerSim = cmdInput.cmdOptionExists("--use_tersim");
+    bool noUseDRAlgo = cmdInput.cmdOptionExists("--no_dr");
 
     try
     { 
-        if (useTerSim)
+        if (noUseDRAlgo)
         {
- 	        allSatAlgo = new AllSatEnumerTernarySim(cmdInput);
+ 	        allSatAlgo = new AllSatEnumer(cmdInput);
         }
         else
         {

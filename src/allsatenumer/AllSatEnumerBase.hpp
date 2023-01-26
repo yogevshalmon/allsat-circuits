@@ -6,6 +6,7 @@
 #include "AllSatGloblas.hpp"
 #include "AigerParser.hpp"
 #include "InputParser.hpp"
+#include "TernarySim.hpp"
 
 using namespace Topor;
 using namespace std;
@@ -22,13 +23,13 @@ class AllSatEnumerBase
     public:
 
         AllSatEnumerBase(const InputParser& inputParser):
-        // default is with rep
-        m_WithRep(!inputParser.cmdOptionExists("--no_rep")),
+        // defualt is false
+        m_UseTerSim(inputParser.cmdOptionExists("--use_tersim")),
         // default is not printing
         m_PrintEnumer(inputParser.cmdOptionExists("--print_model")),
         // default is mode 5
-        m_ToporMode(inputParser.getUintCmdOption("-topor_mode", 5)),
-		m_Solver(nullptr), m_NumberOfAssg(0), m_NumberOfModels(0)
+        m_ToporMode(inputParser.getUintCmdOption("-satsolver_mode", 5)),
+		m_Solver(nullptr), m_TernarySimulation(nullptr), m_NumberOfAssg(0), m_NumberOfModels(0)
         {
 			m_Clk = clock();
             m_Solver = new CTopor();
@@ -39,7 +40,32 @@ class AllSatEnumerBase
 
         virtual void InitializeSolver(string filename) { throw runtime_error("Function not implemented"); };
 
-        virtual void FindAllEnumer() { throw runtime_error("Function not implemented"); };
+        void FindAllEnumer()
+        {
+            int res = ToporBadRetVal;
+            res = SolveAndGetResult();
+   
+            while( res == ToporSatRetVal)
+            {
+                m_NumberOfAssg++; 
+                unsigned numOfDontCares = GetBlockingClause();         
+                if (m_PrintEnumer)
+                {
+                    printEnumr();
+                }
+                m_NumberOfModels = m_NumberOfModels + (unsigned long long)pow(2,numOfDontCares);
+
+                // block with the blocking clause before calling next SAT
+                m_Solver->AddClause(m_BlockingClause);
+
+                res = SolveAndGetResult();      
+            }
+            // not unsat at the end
+            if (res != ToporUnSatRetVal)
+            {
+                throw runtime_error("Last call wasnt Unsat as expected");
+            }
+        };
 
         void PrintResult(bool wasInterrupted = false)
         {
@@ -64,7 +90,11 @@ class AllSatEnumerBase
             cout << "c cpu time (solve)  : " << Time <<" sec" << endl;
         }
 
-        virtual ~AllSatEnumerBase() { delete m_Solver;}
+        virtual ~AllSatEnumerBase() 
+        {
+            delete m_Solver;
+            delete m_TernarySimulation;
+        }
 
     protected:
 
@@ -143,16 +173,20 @@ class AllSatEnumerBase
         virtual void printEnumr() { throw runtime_error("Function not implemented"); };
         
         // should return the number of dont cares
-        virtual unsigned EnforceSatEnumr() { throw runtime_error("Function not implemented"); return 0;};
+        // and initilize m_BlockingClause with the current blocking clause
+        virtual unsigned GetBlockingClause() { throw runtime_error("Function not implemented"); return 0;};
 		
         // *** Variables ***
 
-        bool m_WithRep;
-        bool m_PrintEnumer;
-        unsigned m_ToporMode;
+        const bool m_UseTerSim;
+        const bool m_PrintEnumer;
+        const unsigned m_ToporMode;
 
         AigerParser m_AigParser;
         CTopor* m_Solver;
+        TernarySim* m_TernarySimulation;
+
+        vector<SATLIT> m_BlockingClause;
 
 		// *** Stats ***
 
