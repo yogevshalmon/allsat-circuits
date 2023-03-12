@@ -1,6 +1,6 @@
 # HALL (Haifa AllSAT)
 
-HALL is a tool for AllSAT enumeration in Combinational Circuits(in AIGER format)
+HALL is an AllSAT enumeration tool for Combinational Circuits(in AIGER format)
 
 ## Summary
 
