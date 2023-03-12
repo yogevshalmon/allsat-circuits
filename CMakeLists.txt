@@ -25,7 +25,7 @@ include_directories(src/allsatenumer)
 file(GLOB_RECURSE SOURCES src/allsatenumer/*.cpp src/allsatenumer/*.hpp)
 
 # Build executable with aiger
-add_executable(allsatenumer-aig ${SOURCES})
+add_executable(hall_tool ${SOURCES})
 
 # Include header files
 include_directories(${LIB_PREFIX}/intel_sat_solver) 
@@ -39,6 +39,6 @@ add_custom_target(intel_sat_solver
 
 add_subdirectory(${LIB_PREFIX})
 
-target_link_libraries(allsatenumer-aig PRIVATE lorina ${LIB_PREFIX}/intel_sat_solver/libintel_sat_solver.a)
+target_link_libraries(hall_tool PRIVATE lorina ${LIB_PREFIX}/intel_sat_solver/libintel_sat_solver.a)
 
-add_dependencies(allsatenumer-aig intel_sat_solver)
+add_dependencies(hall_tool intel_sat_solver)
