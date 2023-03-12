@@ -15,9 +15,9 @@ Please check the **How to use the tool** section for more info.
 
 ## How to build
 
-Note: Compilation requires g++ version 10.1.0 or higher.
-
-We use CMake for building the tool, please verify that you have CMake VERSION 3.8 or higher.
+Please consider the following before continuing: 
+- Compilation requires g++ version 10.1.0 or higher.
+- We use CMake for building the tool, please verify that you have CMake VERSION 3.8 or higher.
 
 To build the tool, just clone the repository and run this commands(after entering the repository directory)
 
