@@ -11,7 +11,7 @@ Further more, this tool utilizing **partial assignments**, which are assignment 
 
 Internally, incremntal sat solver - "intel_sat_solver" is been used, please check the repository https://github.com/alexander-nadel/intel_sat_solver for more details.
 
-Please check the **How to use the tool** section for more info.
+The solutions returned from HALL can be either disjoint(no overlap) or non-disjoint(may overlap), please check the **How to use the tool** section for more info.
 
 ## How to build
 
@@ -43,7 +43,7 @@ HALL assume that the circuit output must evalute to 1, and enumerate all the sol
 
 Each assignment the value of each input variable v can either be v (positive), -v (negative) or x (*don't-care*), while don't-care values doesnt need to be include in the assignment.
 
-The variable polarity is with respect to the AIGINDEX not the AIGLIT, meaning for AIGLIT 2 the variable can be either 1, -1, x.
+The variable polarity is with respect to the input *index*, meaning for input with literal 2 the variable value in the assignment can be either 1, -1 or x.
 
 For example consider the next AIGER model describing a simple AND gate:
 
@@ -54,8 +54,34 @@ aag 4 2 0 1 1
 6
 6 2 4
 ```
-The single solution where both inputs are equalto 1 is incorparated with the next assignment HALL output:
+The single solution where both inputs are equal to 1 is incorparated with the next assignment HALL outputs:
 
 ```
 1 2
 ```
+
+### disjoint and non-disjoint solutions
+
+An important feature in HALL is if the solutions are disjoint or non-disjoint,
+disjoint solutions do not overlap, meaning that any full assignment is represent by a single partial assignment, In contrast in non-disjoint solutions full assignments may be represent by more than a single partial assignment.
+to clarfiy assume we have the next following solutions:
+
+```
+1 2 3
+-1 2 3
+1 -2 3
+```
+An example for disjoint solutions where there are no overlap is:
+
+```
+2 3 
+1 -2 3
+```
+
+And non-disjoint where the solution "1 -2 3" is overlapped:
+
+```
+2 3
+1 3
+```
+
