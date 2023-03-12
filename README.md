@@ -37,5 +37,25 @@ After building the tool in the "build" directory, you should be able to run the 
 ## How to use the tool
 
 The tool gets as an input AIGER file, and outputs all the satisfying partial input assignment in DNF.
+The AIGER file should describe a Combinational Circuit containing only **one** output.
 
-Each assignment the value of each variable v can either be v (positive), -v (negative) or x (*don't-care*).
+HALL assume that the circuit output must evalute to 1, and enumerate all the solution to the inputs such that the output still evalute to 1.
+
+Each assignment the value of each input variable v can either be v (positive), -v (negative) or x (*don't-care*), while don't-care values doesnt need to be include in the assignment.
+
+The variable polarity is with respect to the AIGINDEX not the AIGLIT, meaning for AIGLIT 2 the variable can be either 1, -1, x.
+
+For example consider the next AIGER model describing a simple AND gate:
+
+```
+aag 4 2 0 1 1
+2
+4
+6
+6 2 4
+```
+The single solution where both inputs are equalto 1 is incorparated with the next assignment HALL output:
+
+```
+1 2
+```
