@@ -24,7 +24,7 @@ To build the tool, just clone the repository and run this commands(after enterin
 1.	```cmake -S . -B build```
 2.  ```make```
 
-This will create new folder **build** and will compile the tool in release mode.
+This will create new folder named "**build**" and will compile the tool in release mode.
 
 this should generate the tool **hall_tool**.
 
