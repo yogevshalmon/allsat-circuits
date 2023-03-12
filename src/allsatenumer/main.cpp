@@ -24,7 +24,7 @@ void sigHandler(int s){
 
 void PrintUsage()
 {
-    cout << "USAGE: ./allsatenumr-aig <input_file_name> <--use_tersim> <--dr_block_no_rep> <--print_model> <-satsolver_mode value>" << endl;
+    cout << "USAGE: ./hall_tool <input_file_name> <--use_tersim> <--dr_block_no_rep> <--print_model> <-satsolver_mode value>" << endl;
     cout << "where <input_file_name> is the path to a aag instance in Aiger format" << endl;
     cout << "where <--use_tersim> if to use teranry simulation mode" << endl;
     cout << "where <--no_rep> represent if to not use repetition" << endl;
