@@ -26,12 +26,12 @@ To build the tool, just clone the repository and run this commands(after enterin
 
 This will create new folder **build** and will compile the tool in release mode.
 
-this should generate the tool **TODO_here**.
+this should generate the tool **hall_tool**.
 
 After building the tool in the "build" directory, you should be able to run the tool, for example:
 
 ```
-./tool_name-TODO ../benchmarks/halfadder.aag
+./hall_tool ../benchmarks/...
 ```
 
 ## How to use the tool
