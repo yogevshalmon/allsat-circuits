@@ -20,6 +20,12 @@ public:
         //TODO check here exception , 2 headers, not inputs...
 
         m_IsVarRef.resize((size_t)m, false);
+
+        // always refernce index 0 for true\false
+        if (m > 0)
+        {
+            m_IsVarRef[0] = true;
+        }
     }
 
     void on_header( uint64_t m, uint64_t i, uint64_t l, uint64_t o, uint64_t a,
@@ -43,6 +49,7 @@ public:
     
     void on_output( uint32_t index, uint32_t lit ) const override
     {
+        // TODO add ref?
         // output should be asserted in any case, no need to insert to m_IsVarRef
         assert( index == m_Outputs.size() );
         m_Outputs.push_back(lit);
@@ -51,8 +58,10 @@ public:
     void on_and( uint32_t g_index, uint32_t left_lit, uint32_t right_lit ) const override
     {   
         m_IsVarRef[g_index] = true;
-        m_IsVarRef[AIGLitToAIGIndex(left_lit)] = true;
-        m_IsVarRef[AIGLitToAIGIndex(right_lit)] = true;
+        if ( m_IsVarRef[AIGLitToAIGIndex(left_lit)] == false || m_IsVarRef[AIGLitToAIGIndex(right_lit)] == false)
+        {
+           throw runtime_error("Error when parsing AIG, an AND gate reference unkown or not intorduce literals " + to_string(left_lit) + ", " + to_string(right_lit)); 
+        }
 
         m_AndGates.push_back(AigAndGate(AIGIndexToAIGLit(g_index), left_lit, right_lit));
     }
