@@ -78,10 +78,11 @@ An example for disjoint solutions where there are no overlap is:
 1 -2 3
 ```
 
-And non-disjoint where the solution "1 -2 3" is overlapped:
+And non-disjoint solutions where the solution "1 -2 3" is represent by both partial assignments:
 
 ```
 2 3
 1 3
 ```
 
+HALL contain different algorithms where each one produces disjoint or non-disjoint solutions, please check the next section for more details.
