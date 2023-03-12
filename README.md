@@ -1,2 +1,2 @@
 # allsat-circuits
-AllSAT enumeration for circuit(in aiger format)
+AllSAT enumeration for Combinational Circuits(in aiger format)
