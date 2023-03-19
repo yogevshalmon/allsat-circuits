@@ -48,12 +48,12 @@ class AllSatEnumerBase
         // defualt is true
         m_UseTerSim(inputParser.cmdOptionExists("--no_tersim") ? false : CheckTersimDefFromCurrMode(inputParser.getCmdOption("-mode"))),
         // default is not printing
-        m_PrintEnumer(inputParser.cmdOptionExists("--print_models")),
+        m_PrintEnumer(inputParser.cmdOptionExists("--print_enumer")),
         // default is mode 5
         m_SatSolverMode(inputParser.getUintCmdOption("-satsolver_mode", 5)),
         // if timeout was given
         m_UseTimeOut(inputParser.cmdOptionExists("-timeout")),
-        // timeout
+        // check if timeout is given in command
         m_TimeOut(inputParser.getUintCmdOption("-timeout", 3600)),
         // default is 
 		m_Solver(nullptr), m_TernarySimulation(nullptr), m_NumberOfAssg(0), m_NumberOfModels(0), m_IsTimeOut(false)
@@ -68,12 +68,15 @@ class AllSatEnumerBase
             {
                 m_Solver->SetParam("/timeout/global",(double)m_TimeOut);
             }
+
         }
 
         virtual void InitializeSolver(string filename) { throw runtime_error("Function not implemented"); };
 
         void FindAllEnumer()
         {
+            PrintInitialInformation();
+
             int res = ToporBadRetVal;
             res = SolveAndGetResult();
    
@@ -138,6 +141,16 @@ class AllSatEnumerBase
         }
 
     protected:
+
+        // print initial information, timeout etc..
+        void PrintInitialInformation()
+        {
+            cout << "c Start enumerating AllSAT" << endl;
+            if (m_UseTimeOut)
+            {
+                cout << "c Timeout: " << m_TimeOut << " seconds" << endl;
+            }
+        }
         
         // parse aag or aig files
         // initilize m_AigParser

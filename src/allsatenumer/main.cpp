@@ -28,7 +28,7 @@ void PrintUsage()
     // max ...
     // outfile
     cout << "USAGE: ./hall_tool <input_file_name> [<-mode> <mode_name>] [additonal parameters]" << endl;
-    cout << "where <input_file_name> is the path to a aag or aig instance in AIGER format" << endl;
+    cout << "where <input_file_name> is the path to a aag or aig instance in AIGER format" << endl << endl;
     cout << "you can provide a pre-configured mode <mode_name> from the list [";
     for (size_t i = 0; i < MODES.size(); i++) {
         if (i != 0) {
@@ -42,12 +42,12 @@ void PrintUsage()
     // additonal parameters
     cout << endl;
     cout << "additonal parameters can be provided in [additonal parameters]:" << endl;
-    cout << "Runnig example: \n\t ./allsatenumer-aig ../benchmarks/halfadder.aag -timeout 60 -satsolver_mode 6" << endl;
+    cout << "Runnig example: \n\t ./hall_tool ../benchmarks/AND.aag -timeout 60 --no_tersim" << endl;
 
     cout << endl;
     cout << "General:" << endl;
-    cout << "[<-timeout> <value>] provide timeout in seconds" << endl;
-    cout << "[--print_models] represent if to print the enumerations found" << endl;
+    cout << "[<-timeout> <value>] provide timeout in seconds, if <value> not provided use default of 3600 sec" << endl;
+    cout << "[--print_enumer] represent if to print the enumerations found" << endl;
     cout << "[<-satsolver_mode> <value>] represent the sat solver mode" << endl;
     cout << "\t Accepeted Values: [0,1,2,3,4,5,6,7] \n\t defualt value: 5" << endl;
 

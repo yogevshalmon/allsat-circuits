@@ -1,24 +1,33 @@
 #pragma once
+
 #include <queue>
+
 #include "AllSatGloblas.hpp"
 #include "AigerParser.hpp"
+
 using namespace std;
+
+// ternary values enum
 enum TVal : unsigned char
 {
   True,
   False,
-  DontCare
+  DontCare,
   UnKown
 };
 
+// define negation of ternary values
 inline static TVal GetTValNeg(const TVal& tval)
 {
     if (tval == TVal::True)
         return TVal::False;
+
     if (tval == TVal::False)
         return TVal::True;
+
     if (tval == TVal::DontCare)
         return TVal::DontCare;
+
     return TVal::UnKown;
 };
 
@@ -34,8 +43,10 @@ public:
     m_MaxIndex(aigerParser.GetMaxIndex())
     {
         m_IndexCurrVal.resize((size_t)(m_MaxIndex + 1), TVal::UnKown);
+
         //TODO add as parameter
         m_IndexGatesWatch.resize((size_t)(m_MaxIndex + 1));
+
         // intilize m_IndexGatesWatch, we assume the gates are in order from bottom-up
         for (size_t gIndex = 0; gIndex < m_AndGates.size(); ++gIndex)
         {
@@ -43,36 +54,19 @@ public:
             m_IndexGatesWatch[AIGLitToAIGIndex(gate.GetR0())].push_back(gIndex);
             m_IndexGatesWatch[AIGLitToAIGIndex(gate.GetR1())].push_back(gIndex);
         }
-        //TODO
-        // unsigned index = 0;
-        // // print m_IndexGatesWatch
-        // for(const vector<size_t>& gateWatchVec :  m_IndexGatesWatch)
-        // {
-        //     cout << "Index " << index << ":" << endl;
-        //     cout << "\t";
-        //     for (const size_t& gateIndex : gateWatchVec)
-        //     {
-        //         cout << gateIndex << " ";
-        //     }
-        //     cout << endl;
-        //     index++;
-        // }
     };
+
     // initialVal contain the values to start simulate from
     void MaximizeDontCare(const vector<pair<AIGLIT, TVal>>& initialValues)
     {
         // clear values before new simulation
         m_IndexCurrVal.assign( m_IndexCurrVal.size(), TVal::UnKown);
 
-        //cout << "initialValues size : " << initialValues.size() << endl;
-
         for (const auto& initValPair : initialValues)
         {
-            //cout << "AssignValForLit : " << initValPair.first << endl;
             AssignValForLit(initValPair.first, initValPair.second);
         }
 
-        //TODO parameter this
         // simulate all the gates value from initial values
         // should be a valid assigment
         for (const AigAndGate& gate : m_AndGates)
@@ -82,10 +76,10 @@ public:
 
         for (const AIGLIT outLit : m_Outputs)
         {
-            // assume all gates should be 1/0
-            if (GetValForLit(outLit) == TVal::UnKown || GetValForLit(outLit) == TVal::DontCare)
+            // assume all outputs should be 1
+            if (GetValForLit(outLit) != TVal::True)
             {
-                throw runtime_error("Initial assigment values are not valid values of 0/1");
+                throw runtime_error("Initial assigment values are not valid, output not asserted to 1");
             }  
         }
 
@@ -111,15 +105,7 @@ public:
             for (const size_t& inputRefGateIndex : inputGatesRef)
             {
                 gatesToCheck.push(inputRefGateIndex);
-                //cout << "Push new index: "  << inputRefGateIndex << endl;
             }
-
-            // TODO - add as parameter
-            // simulate all the gates
-            // for (const AigAndGate& gate : m_AndGates)
-            // {
-            //     AssignValForLit(gate.GetL(), GetAndOfTVal(GetValForLit(gate.GetR0()), GetValForLit(gate.GetR1())));
-            // }
 
             // iterate until no more gates to check
             while(!gatesToCheck.empty())
@@ -127,24 +113,14 @@ public:
                 const size_t currGateIndex = gatesToCheck.top();
                 gatesToCheck.pop();
 
-                //cout << "Current gate index: "  << currGateIndex << endl;
-
-                //cout << "gatesToCheck size: "  << gatesToCheck.size() << endl;
-
                 // remove duplicate gates check
                 while(currGateIndex == gatesToCheck.top() && !gatesToCheck.empty())
                 {
-                    //cout << "Current top index: "  << gatesToCheck.top() << endl;
                     gatesToCheck.pop();
-                    //cout << "gatesToCheck size: "  << gatesToCheck.size() << endl;  
                 }
 
-                //cout << "Finish remove duplicates" << endl;
-
                 const AigAndGate& currGate = m_AndGates[currGateIndex];
-
-                //cout << "Current gate " << currGate.GetL() << " = " <<  currGate.GetR0() << " & " << currGate.GetR1() << endl;
-
+                
                 const AIGLIT& gateLit = currGate.GetL();
 
                 TVal currGateVal = GetValForLit(gateLit);
@@ -162,7 +138,6 @@ public:
                 for (const size_t& newGateIndex : m_IndexGatesWatch[AIGLitToAIGIndex(gateLit)])
                 {
                     gatesToCheck.push(newGateIndex);
-                    //cout << "Push new index: "  << newGateIndex << endl;
                 }
 
             }
@@ -180,14 +155,19 @@ public:
         }
     }
 
+
+    // get value the current value for lit
     TVal GetValForLit(const AIGLIT lit)
     {
         // special cases for const true\false
         if (lit == 1)
             return TVal::True;
+
         if (lit == 0)
             return TVal::False;
+
         AIGINDEX index = AIGLitToAIGIndex(lit);
+
         if (index >= m_IndexCurrVal.size())
         {
            throw runtime_error("Accessing unkonw lit when getting val for lit " + to_string(lit));
@@ -199,6 +179,7 @@ public:
 			return GetTValNeg(m_IndexCurrVal[index]);
     }
 
+    // get value the current value for index
     TVal GetValForIndex(const AIGINDEX index, bool neg = false)
     {
         if (index >= m_IndexCurrVal.size())
@@ -252,8 +233,10 @@ private:
     {
         if (val0 == TVal::UnKown || val1 == TVal::UnKown)
             throw runtime_error("And gate not defined for unkown value");
+
         if (val0 == TVal::False || val1 == TVal::False)
             return TVal::False;
+
         if (val0 == TVal::DontCare || val1 == TVal::DontCare)
             return TVal::DontCare;
         
