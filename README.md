@@ -22,16 +22,17 @@ Please consider the following before continuing:
 To build the tool, just clone the repository and run this commands(after entering the repository directory)
 
 1.	```cmake -S . -B build```
+2.  ```cd build```
 2.  ```make```
 
 This will create new folder named "**build**" and will compile the tool in release mode.
 
 this should generate the tool **hall_tool**.
 
-After building the tool in the "build" directory, you should be able to run the tool, for example:
+After building the tool in the "build" directory, you should be able to run the tool, for example ask for help:
 
 ```
-./hall_tool ../benchmarks/...
+./hall_tool -h
 ```
 
 ## How to use the tool
