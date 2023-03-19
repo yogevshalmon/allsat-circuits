@@ -7,6 +7,9 @@
 using namespace Topor;
 using namespace std;
 
+/*
+    allsat class based on Tseitin encoding
+*/
 class AllSatEnumer : public AllSatEnumerBase
 {
     public:
@@ -19,6 +22,7 @@ class AllSatEnumer : public AllSatEnumerBase
         {
             ParseAigFile(filename);
 
+            // initilize tersim if needed
             if (m_UseTerSim)
             {
                 m_TernarySimulation = new TernarySim(m_AigParser);
@@ -40,10 +44,14 @@ class AllSatEnumer : public AllSatEnumerBase
                 return AIGLitToSATLit(aiglit);
             });
             
-             //TODO outputs should be size 1 ?
+            
             // Get all the the Output
             const vector<AIGLIT>& outputs = m_AigParser.GetOutputs();
-            // TODO can assert different things on the output
+
+            if (outputs.size() > 1)
+            {
+                throw runtime_error("Error, number of outputs should be 1"); 
+            }
 
             for(AIGLIT aigLitOutput : outputs)
             {
@@ -51,21 +59,6 @@ class AllSatEnumer : public AllSatEnumerBase
                 m_Solver->AddClause(out);
             }
             
-            // SATLIT maxLit = (SATLIT)((isIndexRef.size()+1)*2);
-            // vector<SATLIT> outputsIsPos;
-
-            // for(AIGLIT aigOutput : outputs)
-            // {
-            //     // create and for output is pos
-            //     DRVAR outdr = GetDualFromAigLit(aigOutput);
-            //     WriteAnd(maxLit, GetPos(outdr), -GetNeg(outdr));
-            //     outputsIsPos.push_back(maxLit);
-            //     maxLit++;
-            // }
-
-            // // now assert clause of outputsIsPos meaning one of the output must be 1
-
-            // m_Solver->AddClause(outputsIsPos);
         }
 
         virtual ~AllSatEnumer(){}
@@ -128,7 +121,7 @@ class AllSatEnumer : public AllSatEnumerBase
                     return {AIGIndexToAIGLit(SATLitToAIGIndex(inputSatLit)), m_Solver->GetLitValue(inputSatLit) == TToporLitVal::VAL_SATISFIED ? TVal::True : TVal::False};
                 });
 
-                //cout << "Before MaximizeDontCare" << endl;
+                // use ternary simulation for maximize dont-care values
                 m_TernarySimulation->MaximizeDontCare(inputValues);
             }
 
@@ -190,7 +183,8 @@ class AllSatEnumer : public AllSatEnumerBase
                     }
                     else if (val == TVal::DontCare) // dont care case
                     {
-                        cout << "x ";
+                        // TODO - for now print nothing
+                        //cout << "x ";
                     }
                     else
                     {

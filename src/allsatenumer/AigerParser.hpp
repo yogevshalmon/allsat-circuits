@@ -9,7 +9,9 @@
 using namespace lorina;
 using namespace std;
 
-
+/*
+    parser for aiger, based on lorina
+*/
 class AigerParser : public aiger_reader
 {
 public:
@@ -17,7 +19,21 @@ public:
 
     void on_header( uint64_t m, uint64_t i, uint64_t l, uint64_t o, uint64_t a ) const override
     {
-        //TODO check here exception , 2 headers, not inputs...
+        if ( m == 0)
+        {
+            throw runtime_error("Error when parsing AIG, max variable index is 0"); 
+        }
+
+        if ( i == 0)
+        {
+            throw runtime_error("Error when parsing AIG, no inputs provided"); 
+        }
+
+         if ( o > 1)
+        {
+            throw runtime_error("Error when parsing AIG, please provide only 1 output"); 
+        }
+
 
         m_IsVarRef.resize((size_t)m, false);
 
@@ -31,8 +47,10 @@ public:
     void on_header( uint64_t m, uint64_t i, uint64_t l, uint64_t o, uint64_t a,
                           uint64_t b, uint64_t c, uint64_t j, uint64_t f ) const override
     {
-        // TODO fix this
-        cout << "c Extended aiger format found, ignoring unsupported features." << endl;
+        // TODO it seems lorina always call this header, remove output for now
+        // cout << "c Extended aiger format found, ignoring unsupported features." << endl;
+
+        // just call normal header
         on_header(m, i, l, o, a);
     }
 
@@ -49,8 +67,8 @@ public:
     
     void on_output( uint32_t index, uint32_t lit ) const override
     {
-        // TODO add ref?
         // output should be asserted in any case, no need to insert to m_IsVarRef
+
         assert( index == m_Outputs.size() );
         m_Outputs.push_back(lit);
     }

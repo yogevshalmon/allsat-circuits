@@ -2,6 +2,9 @@
 
 #include "AllSatGloblas.hpp"
 
+/*
+    Simple class for an aig and gate
+*/
 class AigAndGate
 {
 public:

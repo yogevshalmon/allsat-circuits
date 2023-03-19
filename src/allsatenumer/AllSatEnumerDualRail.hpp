@@ -7,12 +7,31 @@
 using namespace Topor;
 using namespace std;
 
+static unsigned GetDRBlockModeDefFromCurrMode(const string& mode)
+{
+    unsigned defVal = 1;
+    if (mode == DRMS_DISJOINT_ALG || mode == COMB_DISJOINT_BLOCK_ALG)
+    {
+        return 1;
+    }
+    else if (mode == DRMS_NON_DISJOINT_ALG || mode == COMB_NON_DISJOINT_BLOCK_ALG)
+    {
+        return 0;
+    }
+
+    // return default
+    return defVal;
+}
+
+/*
+    allsat useing dual-rail encoding
+*/
 class AllSatEnumerDualRail : public AllSatEnumerBase
 {
     public:
         AllSatEnumerDualRail(const InputParser& inputParser) : AllSatEnumerBase(inputParser) ,
-        // defualt is false
-        m_BlockNoRep(inputParser.cmdOptionExists("--dr_block_no_rep")),
+        // defualt is true (-dr_block_mode = 1)
+        m_BlockNoRep(inputParser.getUintCmdOption("-dr_block_mode", GetDRBlockModeDefFromCurrMode(inputParser.getCmdOption("-mode"))) == 1),
         // default is true
         m_DoForcePol(!inputParser.cmdOptionExists("--dr_no_force_pol")),
         m_DoBoost(!inputParser.cmdOptionExists("--dr_no_boost"))
@@ -74,10 +93,13 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
                 }
             }
             
-             //TODO outputs should be size 1 ?
-            // Get all the the Output
+            // output should be of size 1
             const vector<AIGLIT>& outputs = m_AigParser.GetOutputs();
-            // TODO can assert different things on the output
+            
+            if (outputs.size() > 1)
+            {
+                throw runtime_error("Error, number of outputs should be 1"); 
+            }
 
             for(AIGLIT aigOutput : outputs)
             {
@@ -87,21 +109,6 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
                 m_Solver->AddClause(-GetNeg(outdr));
             }
             
-            // SATLIT maxLit = (SATLIT)((isIndexRef.size()+1)*2);
-            // vector<SATLIT> outputsIsPos;
-
-            // for(AIGLIT aigOutput : outputs)
-            // {
-            //     // create and for output is pos
-            //     DRVAR outdr = GetDualFromAigLit(aigOutput);
-            //     WriteAnd(maxLit, GetPos(outdr), -GetNeg(outdr));
-            //     outputsIsPos.push_back(maxLit);
-            //     maxLit++;
-            // }
-
-            // // now assert clause of outputsIsPos meaning one of the output must be 1
-
-            // m_Solver->AddClause(outputsIsPos);
         }
 
         virtual ~AllSatEnumerDualRail(){}
@@ -234,7 +241,8 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
                 }
                 else if (currVal == TVal::DontCare) // dont care case
                 {
-                    cout << "x ";
+                    // TODO - for now print nothing
+                    //cout << "x ";
                 }
                 else
                 {

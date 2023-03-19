@@ -7,6 +7,7 @@
 #include "AigerParser.hpp"
 #include "InputParser.hpp"
 #include "TernarySim.hpp"
+#include "Utilities.hpp"
 
 using namespace Topor;
 using namespace std;
@@ -18,15 +19,35 @@ static constexpr int ToporUnSatRetVal = 20;
 static constexpr SATLIT CONST_LIT_TRUE = 1;
 static constexpr SATLIT CONST_LIT_FALSE = -1;
 
+static bool CheckTersimDefFromCurrMode(const string& mode)
+{
+    bool defVal = true;
+    if (mode == TERSIM_ALG || mode == COMB_DISJOINT_BLOCK_ALG || mode == COMB_NON_DISJOINT_BLOCK_ALG)
+    {
+        return true;
+    }
+    else if (mode == DRMS_DISJOINT_ALG || mode == DRMS_NON_DISJOINT_ALG)
+    {
+        return false;
+    }
+
+    // return default
+    return defVal;
+}
+
+/*
+    base class for allsat
+    provide some general functonallity
+*/
 class AllSatEnumerBase 
 {
     public:
 
         AllSatEnumerBase(const InputParser& inputParser):
-        // defualt is false
-        m_UseTerSim(inputParser.cmdOptionExists("--use_tersim")),
+        // defualt is true
+        m_UseTerSim(inputParser.cmdOptionExists("--no_tersim") ? false : CheckTersimDefFromCurrMode(inputParser.getCmdOption("-mode"))),
         // default is not printing
-        m_PrintEnumer(inputParser.cmdOptionExists("--print_model")),
+        m_PrintEnumer(inputParser.cmdOptionExists("--print_models")),
         // default is mode 5
         m_ToporMode(inputParser.getUintCmdOption("-satsolver_mode", 5)),
 		m_Solver(nullptr), m_TernarySimulation(nullptr), m_NumberOfAssg(0), m_NumberOfModels(0)
@@ -60,10 +81,11 @@ class AllSatEnumerBase
 
                 res = SolveAndGetResult();      
             }
+
             // not unsat at the end
             if (res != ToporUnSatRetVal)
             {
-                throw runtime_error("Last call wasnt Unsat as expected");
+                throw runtime_error("Last call wasnt UNSAT as expected");
             }
         };
 
@@ -97,12 +119,25 @@ class AllSatEnumerBase
         }
 
     protected:
-
-        // return the hard clauses and initilize m_NumVars
+        
+        // parse aag or aig files
+        // initilize m_AigParser
         void ParseAigFile(string filename)
         {
             return_code result;
-            result = read_ascii_aiger( filename, m_AigParser);
+            
+            if (stringEndsWith(filename, ".aag"))
+            {
+                result = read_ascii_aiger( filename, m_AigParser);
+            }
+            else if (stringEndsWith(filename, ".aig"))
+            {
+                result = read_aiger( filename, m_AigParser);
+            }
+            else
+            {
+                throw runtime_error("Unkonw aiger format, please provide either .aag or .aig file");
+            }
 
             if ( result == return_code::parse_error )
             {
@@ -191,8 +226,8 @@ class AllSatEnumerBase
 		// *** Stats ***
 
 		clock_t m_Clk;
-        // number of assignemnts found, assignment can contain dont cares
+        // number of satisfiable assignemnts found, assignment can contain dont-cares
         unsigned long long m_NumberOfAssg;
-        // number of models found - assignment with x dont cares -> 2^x models
+        // number of models (full assignments) found - assignment with x dont cares -> 2^x models
         unsigned long long m_NumberOfModels;
 };

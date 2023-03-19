@@ -1,11 +1,34 @@
 #pragma once
 
 #include <stdint.h>
+#include <vector>
 
+
+static const std::string TERSIM_ALG = "tersim";
+static const std::string DRMS_DISJOINT_ALG = "drms-dis";
+static const std::string DRMS_NON_DISJOINT_ALG = "drms-nondis";
+static const std::string COMB_DISJOINT_BLOCK_ALG = "comb-dis-blocking";
+static const std::string COMB_NON_DISJOINT_BLOCK_ALG = "comb-nondis-blocking";
+
+// pre-configured algorithms modes
+static const std::vector<std::string> MODES = {
+    TERSIM_ALG,
+    DRMS_DISJOINT_ALG,
+    DRMS_NON_DISJOINT_ALG,
+    COMB_DISJOINT_BLOCK_ALG,
+    COMB_NON_DISJOINT_BLOCK_ALG
+};
+
+// represet aig lit, where even is positive index, odd is negative index
+// for example 3 -> !1, 2 -> 1
 typedef uint32_t AIGLIT;
+
+// represent aig index
 typedef uint32_t AIGINDEX;
 
+// SAT lit, can be negative
 typedef int32_t SATLIT;
+// dual-raul variable, pairs for SATLIT
 typedef std::pair<SATLIT, SATLIT> DRVAR;
 
 // return lit index i.e. 

@@ -1,3 +1,6 @@
+/*
+Simple input parser class, based on stackoverflow answer
+*/
 class InputParser
 {
     public:
@@ -5,7 +8,7 @@ class InputParser
             for (int i=1; i < argc; ++i)
                 this->tokens.push_back(std::string(argv[i]));
         }
-        /// @author iain
+
         const std::string& getCmdOption(const std::string &option) const
         {
             std::vector<std::string>::const_iterator itr;
@@ -16,7 +19,7 @@ class InputParser
             static const std::string empty_string("");
             return empty_string;
         }
-        /// @author iain
+
         bool cmdOptionExists(const std::string &option) const
         {
             return std::find(this->tokens.begin(), this->tokens.end(), option)
