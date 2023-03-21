@@ -5,10 +5,10 @@
 
 
 static const std::string TERSIM_ALG = "tersim";
-static const std::string DRMS_DISJOINT_ALG = "drms-dis";
-static const std::string DRMS_NON_DISJOINT_ALG = "drms-nondis";
-static const std::string COMB_DISJOINT_BLOCK_ALG = "comb-dis-blocking";
-static const std::string COMB_NON_DISJOINT_BLOCK_ALG = "comb-nondis-blocking";
+static const std::string DRMS_DISJOINT_ALG = "duma-dis";
+static const std::string DRMS_NON_DISJOINT_ALG = "duma-nondis";
+static const std::string COMB_DISJOINT_BLOCK_ALG = "duty-dis-blocking";
+static const std::string COMB_NON_DISJOINT_BLOCK_ALG = "duty-nondis-blocking";
 
 // pre-configured algorithms modes
 static const std::vector<std::string> MODES = {
