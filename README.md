@@ -1,19 +1,19 @@
 # HALL (Haifa AllSAT)
 
-HALL is an AllSAT enumeration tool for Combinational Circuits(in AIGER format)
+HALL is an AllSAT enumeration tool for single output combinational circuits(in AIGER format).
 
 ## Summary
 
-This tool **HALL** given an Combinational Circuit in AIGER format, generates an AllSAT enumeration: all the solutions (satisfying assignments) in Disjunctive Normal Form (DNF). For more information about the AIGER format please visit the page: http://fmv.jku.at/aiger/
+This tool **HALL** given a combinational circuit in AIGER format with a single output (which evalutes to 1), generates an AllSAT enumeration: all the solutions (satisfying assignments) in Disjunctive Normal Form (DNF). For more information about the AIGER format please visit the page: http://fmv.jku.at/aiger/
 
-The solutions are represented using **satisfying input assignment**, meaning only the circuit inputs are enumerated.
-Further more, this tool utilizing **partial assignments**, which are assignment for only part of the variables (where the rest assign the don't-care value), allowing for succinctly describe multiple assignments.
+The solutions are represented using assignments to the inputs only, meaning only the circuit inputs are enumerated.
+Further more, this tool utilizing **ternary** values, which extends the Boolean values 0/1 with an additional value called the don't-care value (denoted by X), which means that the assignemnt is satisfying regard of the variable value, allowing for succinctly describe multiple assignments.
 
-Internally, incremntal sat solver - "intel_sat_solver" is been used, please check the repository https://github.com/alexander-nadel/intel_sat_solver for more details.
+Internally, incremental sat solver - "intel_sat_solver" is been used, please check the repository https://github.com/alexander-nadel/intel_sat_solver for more details.
 
-The solutions returned from HALL can be either disjoint(no overlap) or non-disjoint(may overlap), please check the **How to use the tool** section for more info.
+The solutions returned from HALL can be either disjoint(no overlap) or non-disjoint(may overlap), please check the [**How to use the tool**](#how-to-use-the-tool) section for more info.
 
-## How to build
+## How to build HALL
 
 Please consider the following before continuing: 
 - Compilation requires g++ version 10.1.0 or higher.
@@ -39,19 +39,20 @@ After building the tool in the "build" directory, you should be able to run the 
 
 ## How to use the tool
 
-The tool gets as an input AIGER file, and outputs all the satisfying partial input assignment in DNF.
-The AIGER file should describe a Combinational Circuit containing only **one** output.
+HALL recive as an input an AIGER file (ascii or binary), The AIGER file should describe a Combinational Circuit containing only **one** output.
 
-HALL assume that the circuit output must evalute to 1, and enumerate all the solution to the inputs such that the output still evalute to 1.
+HALL assume that the circuit output must evalute to 1, and enumerate all the solution to the inputs were the output still evalute to 1.
 
-Each assignment the value of each input variable v can either be v (positive), -v (negative) or x (*don't-care*), while don't-care values doesnt need to be include in the assignment.
+For each assignment, the value of an input variable v can either be 1 (positive), 0 (negative) or x (*don't-care*), where we describe the assignment by providing a cube (conjunction of literals), where the sign of the variable (v or -v) correspond to the value (1 or 0 respectively) in the current assignment while don't-care values are not included.
 
-The variable polarity is with respect to the input *index*, meaning for input with literal 2 the variable value in the assignment can be either 1, -1 or x.
+In the AIGER format variables are described with non negative integers (literals), where even numbers represent positive variables and odd numbers represent a negated variable, where the inputs are always positive (even).
+
+HALL represent variables with respect to their *index*, meaning for variable with literal 2 the variable value in the assignment can be either 1, -1 or none, which represent that the variable was assigned X. (recall that HALL only enumerate the circuit's inputs)
 
 For example consider the next AIGER model describing a simple AND gate:
 
 ```
-aag 4 2 0 1 1
+aag 3 2 0 1 1
 2
 4
 6
