@@ -23,7 +23,7 @@ static constexpr SATLIT CONST_LIT_FALSE = -1;
 static bool CheckTersimDefFromCurrMode(const string& mode)
 {
     bool defVal = true;
-    if (mode == TERSIM_ALG || mode == COMB_DISJOINT_BLOCK_ALG || mode == COMB_NON_DISJOINT_BLOCK_ALG)
+    if (mode == TERSIM_ALG || mode == COMB_DISJOINT_BLOCK_ALG)
     {
         return true;
     }
@@ -46,7 +46,7 @@ class AllSatEnumerBase
 
         AllSatEnumerBase(const InputParser& inputParser):
         // defualt is true
-        m_UseTerSim(inputParser.cmdOptionExists("--no_tersim") ? false : CheckTersimDefFromCurrMode(inputParser.getCmdOption("-mode"))),
+        m_UseTerSim(inputParser.cmdOptionExists("--no_tersim") ? false : CheckTersimDefFromCurrMode(inputParser.getCmdOptionWDef("-mode", DEF_ALG))),
         // default is not printing
         m_PrintEnumer(inputParser.cmdOptionExists("--print_enumer")),
         // default is mode 5

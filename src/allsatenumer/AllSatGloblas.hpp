@@ -7,16 +7,18 @@
 static const std::string TERSIM_ALG = "tersim";
 static const std::string DRMS_DISJOINT_ALG = "duma-dis";
 static const std::string DRMS_NON_DISJOINT_ALG = "duma-nondis";
-static const std::string COMB_DISJOINT_BLOCK_ALG = "duty-dis-blocking";
-static const std::string COMB_NON_DISJOINT_BLOCK_ALG = "duty-nondis-blocking";
+static const std::string COMB_DISJOINT_BLOCK_ALG = "duty";
+// for simplicty remove the comb with disjoint blocking, as we only one duty configuration in the paper
+//static const std::string COMB_NON_DISJOINT_BLOCK_ALG = "duty-nondis-blocking";
+
+static const std::string DEF_ALG = COMB_DISJOINT_BLOCK_ALG;
 
 // pre-configured algorithms modes
 static const std::vector<std::string> MODES = {
     TERSIM_ALG,
     DRMS_DISJOINT_ALG,
     DRMS_NON_DISJOINT_ALG,
-    COMB_DISJOINT_BLOCK_ALG,
-    COMB_NON_DISJOINT_BLOCK_ALG
+    COMB_DISJOINT_BLOCK_ALG
 };
 
 // represet aig lit, where even is positive index, odd is negative index

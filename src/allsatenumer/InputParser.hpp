@@ -20,6 +20,18 @@ class InputParser
             return empty_string;
         }
 
+        const std::string& getCmdOptionWDef(const std::string &option, const std::string &defVal) const
+        {
+            std::vector<std::string>::const_iterator itr;
+            itr =  std::find(this->tokens.begin(), this->tokens.end(), option);
+            if (itr != this->tokens.end() && ++itr != this->tokens.end()){
+                return *itr;
+            }
+
+            // string no found return defVal
+            return defVal;
+        }
+
         bool cmdOptionExists(const std::string &option) const
         {
             return std::find(this->tokens.begin(), this->tokens.end(), option)

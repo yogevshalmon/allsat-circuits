@@ -44,7 +44,6 @@ public:
     {
         m_IndexCurrVal.resize((size_t)(m_MaxIndex + 1), TVal::UnKown);
 
-        //TODO add as parameter
         m_IndexGatesWatch.resize((size_t)(m_MaxIndex + 1));
 
         // intilize m_IndexGatesWatch, we assume the gates are in order from bottom-up

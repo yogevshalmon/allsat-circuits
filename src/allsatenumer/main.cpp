@@ -28,8 +28,9 @@ void PrintUsage()
     // max ...
     // outfile
     cout << "USAGE: ./hall_tool <input_file_name> [<-mode> <mode_name>] [additonal parameters]" << endl;
-    cout << "where <input_file_name> is the path to a aag or aig instance in AIGER format" << endl << endl;
-    cout << "you can provide a pre-configured mode <mode_name> from the list [";
+    cout << "where <input_file_name> is the path to a .aag or .aig instance in AIGER format" << endl << endl;
+    cout << "you can provide a pre-configured algorithm <mode_name> where " << DEF_ALG << " is the defualt one" << endl;
+    cout << "\t accepted <mode_name> are [";
     for (size_t i = 0; i < MODES.size(); i++) {
         if (i != 0) {
             std::cout << ", ";
@@ -37,7 +38,7 @@ void PrintUsage()
         std::cout << MODES[i];
     }
     cout << "]" << endl;
-    cout << "\t for example: ./hall_tool <input_file_name> -mode duma-dis" << endl;
+    cout << "\t for example: ./hall_tool <input_file_name> -mode " << TERSIM_ALG << endl;
 
     // additonal parameters
     cout << endl;
@@ -73,7 +74,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    string mode = cmdInput.getCmdOption("-mode");
+    string mode = cmdInput.getCmdOptionWDef("-mode", DEF_ALG);
 
     if (!mode.empty())
     {

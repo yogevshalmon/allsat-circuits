@@ -14,7 +14,7 @@ static unsigned GetDRBlockModeDefFromCurrMode(const string& mode)
     {
         return 1;
     }
-    else if (mode == DRMS_NON_DISJOINT_ALG || mode == COMB_NON_DISJOINT_BLOCK_ALG)
+    else if (mode == DRMS_NON_DISJOINT_ALG)
     {
         return 0;
     }
@@ -31,7 +31,7 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
     public:
         AllSatEnumerDualRail(const InputParser& inputParser) : AllSatEnumerBase(inputParser) ,
         // defualt is true (-dr_block_mode = 1)
-        m_BlockNoRep(inputParser.getUintCmdOption("-dr_block_mode", GetDRBlockModeDefFromCurrMode(inputParser.getCmdOption("-mode"))) == 1),
+        m_BlockNoRep(inputParser.getUintCmdOption("-dr_block_mode", GetDRBlockModeDefFromCurrMode(inputParser.getCmdOptionWDef("-mode", DEF_ALG))) == 1),
         // default is true
         m_DoForcePol(!inputParser.cmdOptionExists("--dr_no_force_pol")),
         m_DoBoost(!inputParser.cmdOptionExists("--dr_no_boost"))
