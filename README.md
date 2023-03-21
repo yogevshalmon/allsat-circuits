@@ -13,6 +13,8 @@ Internally, incremental sat solver - "intel_sat_solver" is been used, please che
 
 The solutions returned from HALL can be either disjoint(no overlap) or non-disjoint(may overlap), please check this [**section**](#disjoint-and-non-disjoint-solutions) under [**How to use the tool**](#how-to-use-the-tool) for more info.
 
+HALL contain different algorithms where each one produces disjoint or non-disjoint solutions, please check [**HALL algorithms**](#hall-algorithms) for more details.
+
 ## How to build HALL
 
 Please consider the following before continuing: 
@@ -37,7 +39,7 @@ After building the tool in the "build" directory, you should be able to run the 
 ./hall_tool -h
 ```
 
-## How to use the tool
+## How to use HALL
 
 HALL recives as an input an AIGER file (ascii or binary), which should describe a combinational circuit containing only **one** output.
 
@@ -60,7 +62,7 @@ aag 3 2 0 1 1
 ```
 The single solution where both inputs are equal to 1 is incorparated with the next assignment "1 2" HALL outputs.
 
-The following command reproduce this result by running HALL with the benchmarks/AND.aag instance.
+The following command reproduce this result by running HALL with the AIGER file "AND.aag", provided under the benchmarks folde:
 
 ```
 ./hall_tool ../benchmarks/AND.aag --print_enumer
@@ -98,4 +100,12 @@ And non-disjoint solutions where the solution "1 -2 3" is represented by both as
 
 ## HALL algorithms
 
-TODO
+HALL contains several different algorithms, where each algorithm can be provided to HALL using "<-mode> <mode_name>" after the input file name, for example:
+
+```
+./hall_tool ../benchmarks/AND.aag -mode comb-dis-block
+```
+
+We provide the list of the pre-configured algorithms
+
+where each one produces disjoint or non-disjoint solutions, 
