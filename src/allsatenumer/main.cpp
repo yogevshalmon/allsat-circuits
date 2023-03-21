@@ -37,7 +37,7 @@ void PrintUsage()
         std::cout << MODES[i];
     }
     cout << "]" << endl;
-    cout << "\t for example: ./hall_tool <input_file_name> -mode comb-dis-block " << endl;
+    cout << "\t for example: ./hall_tool <input_file_name> -mode duma-dis" << endl;
 
     // additonal parameters
     cout << endl;
