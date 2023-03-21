@@ -49,7 +49,7 @@ In the AIGER format variables are described with non negative integers (literals
 
 HALL represent variables with respect to their *index*, meaning for variable with literal 2 the variable value in the assignment can be either 1, -1 or none, which represent that the variable was assigned X. (recall that HALL only enumerate the circuit's inputs)
 
-For example consider the next AIGER model describing a simple AND gate:
+For example consider the next AIGER model describing a simple AND gate (see also benchmarks/AND.aag):
 
 ```
 aag 3 2 0 1 1
@@ -58,10 +58,12 @@ aag 3 2 0 1 1
 6
 6 2 4
 ```
-The single solution where both inputs are equal to 1 is incorparated with the next assignment HALL outputs:
+The single solution where both inputs are equal to 1 is incorparated with the next assignment "1 2" HALL outputs.
+
+The following command reproduce this result by running HALL with the benchmarks/AND.aag instance.
 
 ```
-1 2
+./hall_tool ../benchmarks/AND.aag --print_enumer
 ```
 
 ### disjoint and non-disjoint solutions
