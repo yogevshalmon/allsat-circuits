@@ -103,9 +103,17 @@ And non-disjoint solutions where the solution "1 -2 3" is represented by both as
 HALL contains several different algorithms, where each algorithm can be provided to HALL using "<-mode> <mode_name>" after the input file name, for example:
 
 ```
-./hall_tool ../benchmarks/AND.aag -mode comb-dis-block
+./hall_tool ../benchmarks/AND.aag -mode tersim
 ```
 
-We provide the list of the pre-configured algorithms
+We provide next the list of the algorithms(mode_name) where each one produces disjoint(only duma-dis) or non-disjoint solutions:
 
-where each one produces disjoint or non-disjoint solutions, 
+disjoint solutions algorithms:
+
+- duma-dis
+
+non-disjoint solutions algorithms:
+
+- tersim
+- duma-nondis
+- duty
