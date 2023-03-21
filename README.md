@@ -4,7 +4,7 @@ HALL is an AllSAT enumeration tool for single output combinational circuits(in A
 
 ## Summary
 
-This tool **HALL** given a combinational circuit in AIGER format with a single output (which evalutes to 1), generates an AllSAT enumeration: all the solutions (satisfying assignments) in Disjunctive Normal Form (DNF). For more information about the AIGER format please visit the page: http://fmv.jku.at/aiger/
+This tool **HALL**, given a combinational circuit in AIGER format with a single output (which evalutes to 1), generates an AllSAT enumeration: all the solutions (satisfying assignments) in Disjunctive Normal Form (DNF). For more information about the AIGER format please visit the page: http://fmv.jku.at/aiger/
 
 The solutions are represented using assignments to the inputs only, meaning only the circuit inputs are enumerated.
 Further more, this tool utilizing **ternary** values, which extends the Boolean values 0/1 with an additional value called the don't-care value (denoted by X), which means that the assignemnt is satisfying regard of the variable value, allowing for succinctly describe multiple assignments.
