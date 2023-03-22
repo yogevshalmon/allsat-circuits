@@ -103,7 +103,7 @@ And non-disjoint solutions where the solution "1 -2 3" is represented by both as
 HALL contains several different algorithms, where each algorithm can be provided to HALL using "<-mode> <mode_name>" after the input file name, for example:
 
 ```
-./hall_tool ../benchmarks/AND.aag -mode tersim
+./hall_tool ../benchmarks/AND.aag -mode tale
 ```
 
 We provide next the list of the algorithms(mode_name) where each one produces disjoint(only mars-dis) or non-disjoint solutions:
