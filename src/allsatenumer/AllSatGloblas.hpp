@@ -4,9 +4,9 @@
 #include <vector>
 
 
-static const std::string TERSIM_ALG = "tersim";
-static const std::string DRMS_DISJOINT_ALG = "duma-dis";
-static const std::string DRMS_NON_DISJOINT_ALG = "duma-nondis";
+static const std::string TERSIM_ALG = "tale";
+static const std::string DRMS_DISJOINT_ALG = "mars-dis";
+static const std::string DRMS_NON_DISJOINT_ALG = "mars-nondis";
 static const std::string COMB_DISJOINT_BLOCK_ALG = "duty";
 // for simplicty remove the comb with disjoint blocking, as we only one duty configuration in the paper
 //static const std::string COMB_NON_DISJOINT_BLOCK_ALG = "duty-nondis-blocking";
