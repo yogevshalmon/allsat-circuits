@@ -106,14 +106,14 @@ HALL contains several different algorithms, where each algorithm can be provided
 ./hall_tool ../benchmarks/AND.aag -mode tersim
 ```
 
-We provide next the list of the algorithms(mode_name) where each one produces disjoint(only duma-dis) or non-disjoint solutions:
+We provide next the list of the algorithms(mode_name) where each one produces disjoint(only mars-dis) or non-disjoint solutions:
 
 disjoint solutions algorithms:
 
-- duma-dis
+- mars-dis
 
 non-disjoint solutions algorithms:
 
-- tersim
-- duma-nondis
+- tale
+- mars-nondis
 - duty
