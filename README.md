@@ -106,7 +106,7 @@ HALL contains several different algorithms, where each algorithm can be provided
 ./hall_tool ../benchmarks/AND.aag -mode tale
 ```
 
-We provide next the list of the algorithms(mode_name) where each one produces disjoint(mars-dis) or non-disjoint solutions:
+We provide next the list of the algorithms (<mode_name>) where each one produces disjoint (mars-dis) or non-disjoint solutions:
 
 disjoint solutions algorithms:
 
