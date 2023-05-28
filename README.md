@@ -11,7 +11,7 @@ The tool utilizes **ternary** values, which extends the Boolean values 0/1 with 
 
 Internally, incremental sat solver - "intel_sat_solver" is being used, please check the repository https://github.com/alexander-nadel/intel_sat_solver for more details.
 
-The solutions returned from HALL can be either disjoint(no overlap) or non-disjoint(may overlap), please check this [**section**](#disjoint-and-non-disjoint-solutions) under [**How to use the tool**](#how-to-use-the-tool) for more info.
+The solutions returned from HALL can be either disjoint(no overlap) or non-disjoint(may overlap), please check the section [**disjoint and non-disjoint solutions**](#disjoint-and-non-disjoint-solutions) under [**How to use HALL**](#how-to-use-hall) for more info.
 
 HALL contain different algorithms where each one produces disjoint or non-disjoint solutions, please check [**HALL algorithms**](#hall-algorithms) for more details.
 
