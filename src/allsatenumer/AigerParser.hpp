@@ -56,7 +56,9 @@ public:
 
     void on_input( uint32_t index, uint32_t lit ) const override 
     {
-        // TODO check input is even?
+        // inputs should be positive(even) not negative(odd)
+        // check input is positive
+        assert( lit % 2 == 0 );
 
         // always ref input, if not used we still need to iterate
         m_IsVarRef[AIGLitToAIGIndex(lit)] = true;

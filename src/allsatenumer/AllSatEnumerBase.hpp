@@ -83,14 +83,27 @@ class AllSatEnumerBase
             while( res == ToporSatRetVal)
             {
                 m_NumberOfAssg++; 
-                unsigned numOfDontCares = GetBlockingClause();         
-                if (m_PrintEnumer)
+                unsigned numOfDontCares = GetBlockingClause(); 
+
+                // no blocking clause, all inputs are DC -> tautology
+                if (m_BlockingClause.empty())
                 {
-                    printEnumr();
+                    // TODO other usage?
+                    cout << "c Tautology found" << endl;
                 }
+                else
+                {
+                    if (m_PrintEnumer)
+                    {
+                        printEnumr();
+                    }
+                }
+
+                // TODO handle overflow
                 m_NumberOfModels = m_NumberOfModels + (unsigned long long)pow(2,numOfDontCares);
 
                 // block with the blocking clause before calling next SAT
+                // in case of tautology -> m_BlockingClause is empty casue to exist next 
                 m_Solver->AddClause(m_BlockingClause);
 
                 res = SolveAndGetResult();      
@@ -239,6 +252,29 @@ class AllSatEnumerBase
 
         virtual void printEnumr() { throw runtime_error("Function not implemented"); };
         
+        // print value of a single AIG lit, using the index
+        // base function for all implementation
+        void printIndexVal(const AIGINDEX litIndex, const TVal& currVal)
+        {
+            if (currVal == TVal::True)
+            {
+                cout << litIndex << " ";
+            }
+            else if (currVal == TVal::False)
+            {
+                cout << "-" << litIndex << " ";
+            }
+            else if (currVal == TVal::DontCare) // dont care case
+            {
+                // TODO - for now print nothing
+                //cout << "x ";
+            }
+            else
+            {
+                throw runtime_error("Unkown value for input");
+            }
+        }
+
         // should return the number of dont cares
         // and initilize m_BlockingClause with the current blocking clause
         virtual unsigned GetBlockingClause() { throw runtime_error("Function not implemented"); return 0;};

@@ -166,7 +166,7 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
             return TVal::DontCare;
         }
 
-		void HandleAndGate(AigAndGate gate)
+		void HandleAndGate(const AigAndGate& gate)
 		{
 			DRVAR l = GetDualFromAigLit(gate.GetL());
 			DRVAR r0 = GetDualFromAigLit(gate.GetR0());
@@ -228,36 +228,20 @@ class AllSatEnumerDualRail : public AllSatEnumerBase
             {          
                 TVal currVal = m_UseTerSim ? m_TernarySimulation->GetValForLit(DRToAIGLit(inputdr)) : GetTValFromDR(inputdr);
 
-                // TODO here handle the case inputdr is inserted negated? -> shouldnt happen
                 AIGINDEX litIndex = DRToAIGIndex(inputdr);
 
-                if (currVal == TVal::True)
-                {
-                    cout << litIndex << " ";
-                }
-                else if (currVal == TVal::False)
-                {
-                    cout << "-" << litIndex << " ";
-                }
-                else if (currVal == TVal::DontCare) // dont care case
-                {
-                    // TODO - for now print nothing
-                    //cout << "x ";
-                }
-                else
-                {
-                    throw runtime_error("Unkown value for input");
-                }   
+                printIndexVal(litIndex, currVal);
             }
                 
             cout << endl;
         }
 
 
-    
-    const bool m_BlockNoRep;
-    const bool m_DoBoost;
-    const bool m_DoForcePol;
+    protected:
 
-    vector<DRVAR> m_InputsDR;
+        const bool m_BlockNoRep;
+        const bool m_DoBoost;
+        const bool m_DoForcePol;
+
+        vector<DRVAR> m_InputsDR;
 };

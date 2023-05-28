@@ -3,7 +3,7 @@
 #include "AllSatGloblas.hpp"
 
 /*
-    Simple class for an aig and gate
+    Simple class for an aiger and gate
 */
 class AigAndGate
 {

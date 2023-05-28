@@ -86,7 +86,6 @@ class AllSatEnumer : public AllSatEnumerBase
         // save the 1 lit for TRUE\FALSE const
         AIGINDEX SATLitToAIGIndex(SATLIT lit) const 
         {
-            // TODO check != 0 ?
             if( lit == CONST_LIT_FALSE)
                 return 0;
             if( lit == CONST_LIT_TRUE)
@@ -95,15 +94,29 @@ class AllSatEnumer : public AllSatEnumerBase
             return (abs(lit) - 1);
         }
 
-		void HandleAndGate(AigAndGate gate)
+		void HandleAndGate(const AigAndGate& gate)
 		{
 			AIGLIT l = gate.GetL();
 			AIGLIT r0 = gate.GetR0();
 			AIGLIT r1 = gate.GetR1();
 
             // write and gate using the index variables
-			WriteAnd(AIGLitToSATLit(l), AIGLitToSATLit(r0), AIGLitToSATLit(r1) );
+			WriteAnd(AIGLitToSATLit(l), AIGLitToSATLit(r0), AIGLitToSATLit(r1));
 		}
+        
+        // get value for current lit from the SAT solver
+        TVal GetTValFromLit(const SATLIT lit)
+        {
+            auto isPos = m_Solver->GetLitValue(lit) == TToporLitVal::VAL_SATISFIED;
+            if (isPos)
+            {
+                return TVal::True;
+            }
+            else
+            {
+                return TVal::False;
+            }
+        }
 
         // return the number of dont cares
         unsigned GetBlockingClause()
@@ -127,38 +140,23 @@ class AllSatEnumer : public AllSatEnumerBase
 
             for (const SATLIT input : m_Inputs)
             {
-                if (m_UseTerSim)
+                TVal currVal = m_UseTerSim ? m_TernarySimulation->GetValForIndex(SATLitToAIGIndex(input)) : GetTValFromLit(input);
+
+                if (currVal == TVal::True)
                 {
-                    TVal val = m_TernarySimulation->GetValForIndex(SATLitToAIGIndex(input));
-                    if (val == TVal::True)
-                    {
-                        m_BlockingClause.push_back(-input);
-                    }
-                    else if (val == TVal::False)
-                    {
-                        m_BlockingClause.push_back(input);
-                    }
-                    else if (val == TVal::DontCare) // dont care case
-                    {
-                        numOfDontCares++;
-                    }
-                    else
-                    {
-                        throw runtime_error("Unkown value for input");
-                    }
+                    m_BlockingClause.push_back(-input);
                 }
-                else // TODO check?
+                else if (currVal == TVal::False)
                 {
-                    // TODO check value is TRUE\FALSE?
-                    auto isPos = m_Solver->GetLitValue(input) == TToporLitVal::VAL_SATISFIED;
-                    if (isPos)
-                    {
-                        m_BlockingClause.push_back(-input);
-                    }
-                    else
-                    {
-                        m_BlockingClause.push_back(input);
-                    }
+                    m_BlockingClause.push_back(input);
+                }
+                else if (currVal == TVal::DontCare) // dont care case
+                {
+                    numOfDontCares++;
+                }
+                else
+                {
+                    throw runtime_error("Unkown value for input");
                 }
             }
 
@@ -169,46 +167,18 @@ class AllSatEnumer : public AllSatEnumerBase
         {
             for (const SATLIT& input : m_Inputs)
             {
+                TVal currVal = m_UseTerSim ? m_TernarySimulation->GetValForIndex(SATLitToAIGIndex(input)) : GetTValFromLit(input);
+                
                 AIGINDEX litIndex = SATLitToAIGIndex(input); 
-                if (m_UseTerSim)
-                {
-                    TVal val = m_TernarySimulation->GetValForIndex(litIndex);
-                    if (val == TVal::True)
-                    {
-                        cout << litIndex << " ";
-                    }
-                    else if (val == TVal::False)
-                    {
-                        cout << "-" << litIndex << " ";
-                    }
-                    else if (val == TVal::DontCare) // dont care case
-                    {
-                        // TODO - for now print nothing
-                        //cout << "x ";
-                    }
-                    else
-                    {
-                        throw runtime_error("Unkown value for input");
-                    }
-                }
-                else // TODO check?
-                {
-                    // TODO check value is TRUE\FALSE?
-                    auto isPos = m_Solver->GetLitValue(input) == TToporLitVal::VAL_SATISFIED;
-                    if (isPos)
-                    {
-                        cout << litIndex << " ";
-                    }
-                    else
-                    {
-                        cout << "-" << litIndex << " ";
-                    }
-                }  
+
+                printIndexVal(litIndex, currVal);
             }
                 
             cout << endl;
         }
 
-    vector<SATLIT> m_Inputs;
+    protected:
+
+        vector<SATLIT> m_Inputs;
 
 };
