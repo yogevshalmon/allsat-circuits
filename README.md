@@ -4,7 +4,7 @@ HALL is an AllSAT enumeration tool for single output combinational circuits in A
 
 ## Summary
 
-This tool *HALL*, given a combinational circuit in AIGER format with a single output whose evaluates to 1, generates an AllSAT enumeration: all the solutions (satisfying assignments) in Disjunctive Normal Form (DNF). For more information about the AIGER format please visit the page: http://fmv.jku.at/aiger/
+This tool *HALL*, given a combinational circuit in AIGER format with a single output whose evaluates to 1, generates an AllSAT enumeration: all the solutions (satisfying assignments) in Disjunctive Normal Form (DNF). For more information about the AIGER format please visit the page: http://fmv.jku.at/aiger/.
 
 The solutions are represented using assignments to the inputs only, meaning only the circuit inputs are enumerated.
 The tool utilizes **ternary** values, which extends the Boolean values 0/1 with an additional value called the don't-care value (denoted by X), which means that the assignment is satisfying regardless of the variable's value, allowing for succinctly describe multiple assignments.
@@ -49,7 +49,7 @@ For each assignment, the value of an input variable v can either be 1 (positive)
 
 In the AIGER format variables are described with non negative integers (literals), where even numbers represent positive variables and odd numbers represent a negated variable, where the inputs are always positive (even).
 
-HALL represent variables with respect to their *index*, meaning for variable with literal 2 the variable value in the assignment can be either 1, -1 or none, which represent that the variable was assigned X. (recall that HALL only enumerate the circuit's inputs)
+HALL represent variables with respect to their *index*, meaning for variable with literal 2 the variable value in the assignment can be either 1, -1 or none, which represent that the variable was assigned X. (recall that HALL only enumerate the circuit's inputs).
 
 For example consider the next AIGER model describing a simple AND gate (see also benchmarks/AND.aag):
 
