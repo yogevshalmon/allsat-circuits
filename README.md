@@ -2,6 +2,8 @@
 
 HALL is an AllSAT enumeration tool for single output combinational circuits in AIGER format.
 
+If you use this tool, please cite our paper "AllSAT for Combinational Circuits" (to be published). Check the [**References**](#references) section for additional details.
+
 ## Summary
 
 This tool *HALL*, given a combinational circuit in AIGER format with a single output whose evaluates to 1, generates an AllSAT enumeration: all the solutions (satisfying assignments) in Disjunctive Normal Form (DNF). For more information about the AIGER format please visit the page: http://fmv.jku.at/aiger/.
@@ -117,3 +119,7 @@ non-disjoint solutions algorithms:
 - tale
 - mars-nondis
 - duty
+
+## References
+
+HALL is an implementation of the paper "AllSAT for Combinational Circuits" (to be published), which will be presented in [SAT2023](http://satisfiability.org/SAT23/index.html).
