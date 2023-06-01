@@ -86,7 +86,7 @@ For example, assume we want to represent the following solutions with don't-care
 -1 2 3
 1 -2 3
 ```
-An example for disjoint solutions where with no overlap is (where in the first assignment 1 = X):
+An example for disjoint solutions with no overlap is (where in the first assignment 1 = X):
 
 ```
 2 3 
