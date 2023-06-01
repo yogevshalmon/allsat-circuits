@@ -71,7 +71,7 @@ The following command reproduces this result by running HALL with the AIGER file
 ./hall_tool ../benchmarks/AND.aag --print_enumer
 ```
 
-### disjoint and non-disjoint solutions
+### Disjoint vs. non-disjoint solutions
 
 An important feature in HALL is that it can generate disjoint or non-disjoint solutions, depending on the user needs, where disjoint solutions do not overlap, and non-disjoint solutions may overlap.
 HALL contains different algorithms for the needs of disjoint and non-disjoint solution generation, for more details, refer to the [**HALL algorithms**](#hall-algorithms) section.
