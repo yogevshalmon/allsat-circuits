@@ -2,20 +2,20 @@
 
 HALL is an AllSAT enumeration tool for single output combinational circuits in AIGER format.
 
-If you use this tool, please cite our paper "AllSAT for Combinational Circuits" (to be published). Check the [**References**](#references) section for additional details.
+If you use this tool, please cite our paper Dror Fried, Alexander Nadel, Yogev Shalmon, "AllSAT for Combinational Circuits", SAT'23. Check the [**References**](#references) section for additional details.
 
 ## Summary
 
-This tool *HALL*, given a combinational circuit in AIGER format with a single output whose evaluates to 1, generates an AllSAT enumeration: all the solutions (satisfying assignments) in Disjunctive Normal Form (DNF). For more information about the AIGER format please visit the page: http://fmv.jku.at/aiger/.
+Given a combinational circuit in AIGER format with a single output which evaluates to 1, *HALL* generates an AllSAT enumeration, that is, it generates all the solutions (satisfying assignments) in Disjunctive Normal Form (DNF). For more information about the AIGER format please visit the page: http://fmv.jku.at/aiger/. 
 
-The solutions are represented using assignments to the inputs only, meaning only the circuit inputs are enumerated.
-The tool utilizes **ternary** values, which extends the Boolean values 0/1 with an additional value called the don't-care value (denoted by X), which means that the assignment is satisfying regardless of the variable's value, allowing for succinctly describe multiple assignments.
+The solutions are generated in anytime hashion. They  are represented using assignments to the inputs only, that is, only solutins to the the circuit inputs are enumerated.
+The tool utilizes **ternary** logic, which extends the standard Boolean Logic values 0 and 1 with an additional value called the don't-care value (denoted by X), which means that the assignment is satisfying regardless of the variable's value, allowing for succinctly represent solutions.
 
-Internally, incremental sat solver - "intel_sat_solver" is being used, please check the repository https://github.com/alexander-nadel/intel_sat_solver for more details.
+Internally, the incremental SAT solver - "Intel SAT(R) Solver" is being used, please check the repository https://github.com/alexander-nadel/intel_sat_solver for more details.
 
-The solutions returned from HALL can be either disjoint(no overlap) or non-disjoint(may overlap), please check the section [**disjoint and non-disjoint solutions**](#disjoint-and-non-disjoint-solutions) under [**How to use HALL**](#how-to-use-hall) for more info.
+The solutions returned by HALL can be either disjoint (no overlap) or non-disjoint (may overlap), please check the section [**disjoint and non-disjoint solutions**](#disjoint-and-non-disjoint-solutions) under [**How to use HALL**](#how-to-use-hall) for more info.
 
-HALL contain different algorithms where each one produces disjoint or non-disjoint solutions, please check [**HALL algorithms**](#hall-algorithms) for more details.
+HALL implements different algorithms, please check [**HALL algorithms**](#hall-algorithms) for more details.
 
 ## How to build HALL
 
@@ -45,15 +45,15 @@ After building the tool in the "build" directory, you should be able to run the 
 
 HALL receives as an input an AIGER file (ascii or binary), which should describe a combinational circuit containing only **one** output.
 
-HALL assume that the circuit output must evaluate to 1, and enumerate all the solutions under this condition to the inputs.
+HALL assumes that the circuit output must evaluate to 1 and enumerates all the solutions to the inputs, which satisfies the output.
 
-For each assignment, the value of an input variable v can either be 1 (positive), 0 (negative) or x ( *don't-care* ), where the assignment is described by providing a cube (conjunction of literals), where the sign of the variable (v or -v) correspond to the value (1 or 0 respectively) in the current assignment, while don't-care values are not included.
+For each assignment, the value of an input variable v can either be 1 (positive), 0 (negative) or x (*don't-care*), where the assignment is described by providing a cube (conjunction of literals), where the sign of the variable (v or -v) correspond to the value (1 or 0 respectively) in the current assignment, while don't-care values are not included.
 
-In the AIGER format variables are described with non negative integers (literals), where even numbers represent positive variables and odd numbers represent a negated variable, where the inputs are always positive (even).
+In the AIGER format, variables are described using non-negative integers (literals), where even numbers represent positive variables and odd numbers represent negated variables, where the inputs are always positive (even).
 
-HALL represent variables with respect to their *index*, meaning for variable with literal 2 the variable value in the assignment can be either 1, -1 or none, which represent that the variable was assigned X. (recall that HALL only enumerate the circuit's inputs).
+HALL represent variables with respect to their *index*, that is, for variable with literal 2 the variable value in the assignment can be either 1, -1 or none, which represent that the variable was assigned X (recall that HALL only enumerate the circuit's inputs).
 
-For example consider the next AIGER model describing a simple AND gate (see also benchmarks/AND.aag):
+For example, consider the following AIGER model describing a simple AND gate (see also benchmarks/AND.aag):
 
 ```
 aag 3 2 0 1 1
@@ -62,9 +62,10 @@ aag 3 2 0 1 1
 6
 6 2 4
 ```
-The single solution where both inputs are equal to 1 is incorporated with the next assignment "1 2" HALL outputs.
 
-The following command reproduce this result by running HALL with the AIGER file "AND.aag", provided under the benchmarks folde:
+The single solution where both inputs are equal to 1 is represented by the assignment "1 2" in HALL's output.
+
+The following command reproduces this result by running HALL with the AIGER file "AND.aag", provided under the benchmarks folder:
 
 ```
 ./hall_tool ../benchmarks/AND.aag --print_enumer
@@ -72,27 +73,27 @@ The following command reproduce this result by running HALL with the AIGER file 
 
 ### disjoint and non-disjoint solutions
 
-An important feature in HALL is if the solutions are disjoint or non-disjoint, where disjoint solutions do not overlap, and non-disjoint solutions may overlap.
-HALL contain different algorithms where each one produces disjoint or non-disjoint solutions, for more details, refer to the [**HALL algorithms**](#hall-algorithms) section.
+An important feature in HALL is that it can generate disjoint or non-disjoint solutions, depending on the user needs, where disjoint solutions do not overlap, and non-disjoint solutions may overlap.
+HALL contains different algorithms for the needs of disjoint and non-disjoint solution generation, for more details, refer to the [**HALL algorithms**](#hall-algorithms) section.
 
-Since a solution with don't-care values incorporate multiple (2^{number of don't cares} to be exact) solutions with only 0/1 values, solutions may overlap. Meaning that a solution may be represented by more than one satisfying assignments HALL produce. 
+Since a solution with don't-care values incorporates multiple (2^{number of don't cares} to be exact) solutions with only 0/1 values, solutions may overlap, that is, a total solution may be contained in more than one partial solutions, returned by HALL. 
 
 
-to clarify assume we want to represent the next following solutions with don't-care values:
+For example, assume we want to represent the following solutions with don't-care values:
 
 ```
 1 2 3
 -1 2 3
 1 -2 3
 ```
-An example for disjoint solutions where there are no overlap is (where in the first assignment 1 = X):
+An example for disjoint solutions where with no overlap is (where in the first assignment 1 = X):
 
 ```
 2 3 
 1 -2 3
 ```
 
-And non-disjoint solutions where the solution "1 -2 3" is represented by both assignments:
+The folowing is an example for non-disjoint partial solutions (where the totoal solution "1 -2 3" is represented by by both partial solutions):
 
 ```
 2 3
@@ -102,13 +103,13 @@ And non-disjoint solutions where the solution "1 -2 3" is represented by both as
 
 ## HALL algorithms
 
-HALL contains several different algorithms, where each algorithm can be provided to HALL using "<-mode> <mode_name>" after the input file name, for example:
+HALL contains several different algorithms, where each algorithm can be executed by HALL using "<-mode> <mode_name>" after the input file name, for example:
 
 ```
 ./hall_tool ../benchmarks/AND.aag -mode tale
 ```
 
-We provide next the list of the algorithms (<mode_name>) where each one produces disjoint (mars-dis) or non-disjoint solutions:
+Here is a list of the algorithms (<mode_name>), sorted according to whether they generate disjoint (mars-dis) or non-disjoint solutions:
 
 disjoint solutions algorithms:
 
@@ -122,4 +123,4 @@ non-disjoint solutions algorithms:
 
 ## References
 
-HALL is an implementation of the paper "AllSAT for Combinational Circuits" (to be published), which will be presented in [SAT2023](http://satisfiability.org/SAT23/index.html).
+HALL is introduced in the following paper: Dror Fried, Alexander Nadel, Yogev Shalmon, "AllSAT for Combinational Circuits", [SAT2023](http://satisfiability.org/SAT23/index.html).
