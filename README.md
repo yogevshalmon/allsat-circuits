@@ -13,7 +13,7 @@ The tool utilizes **ternary** logic, which extends the standard Boolean Logic va
 
 Internally, the incremental SAT solver - "Intel SAT(R) Solver" is being used, please check the repository https://github.com/alexander-nadel/intel_sat_solver for more details.
 
-The solutions returned by HALL can be either disjoint (no overlap) or non-disjoint (may overlap), please check the section [**disjoint and non-disjoint solutions**](#disjoint-and-non-disjoint-solutions) under [**How to use HALL**](#how-to-use-hall) for more info.
+The solutions returned by HALL can be either disjoint (no overlap) or non-disjoint (may overlap), please check the section [**disjoint and non-disjoint solutions**](#disjoint-vs-non-disjoint-solutions) under [**How to use HALL**](#how-to-use-hall) for more info.
 
 HALL implements different algorithms, please check [**HALL algorithms**](#hall-algorithms) for more details.
 
