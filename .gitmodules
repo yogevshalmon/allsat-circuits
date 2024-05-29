@@ -7,9 +7,3 @@
 [submodule "libs/sat/cadical"]
 	path = libs/sat/cadical
 	url = https://github.com/arminbiere/cadical.git
-[submodule "libs/sat/cryptominisat"]
-	path = libs/sat/cryptominisat
-	url = https://github.com/msoos/cryptominisat.git
-[submodule "libs/sat/mergesat"]
-	path = libs/sat/mergesat
-	url = https://github.com/conp-solutions/mergesat.git
