@@ -1,4 +1,4 @@
-
+#pragma once
 
 static bool stringEndsWith (std::string const &fullString, std::string const &ending) {
     if (fullString.length() >= ending.length())

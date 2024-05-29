@@ -1,3 +1,5 @@
+#pragma once
+
 /*
 Simple input parser class, based on stackoverflow answer
 */
@@ -7,6 +9,11 @@ class InputParser
         InputParser (int &argc, char **argv){
             for (int i=1; i < argc; ++i)
                 this->tokens.push_back(std::string(argv[i]));
+        }
+
+        void AppendParams(const std::vector<std::string>& params)
+        {
+            tokens.insert( tokens.end(), params.begin(), params.end() );
         }
 
         const std::string& getCmdOption(const std::string &option) const
@@ -30,6 +37,28 @@ class InputParser
 
             // string no found return defVal
             return defVal;
+        }
+
+        const std::vector<std::pair<std::string, double>> getAllCmdOption(const std::string &option) const
+        {
+            std::vector<std::pair<std::string,double>> options = {};
+            std::vector<std::string>::const_iterator itr = this->tokens.begin();
+            while (itr != this->tokens.end())
+            {   
+                if (*itr == option)
+                {
+                    if (++itr != this->tokens.end())
+                    {
+                        if (++itr != this->tokens.end())
+                        {
+                            options.push_back({*(itr-1), std::stod(*itr)});
+                        }
+                    }
+                }
+
+                itr++;
+            }
+            return options;
         }
 
         bool cmdOptionExists(const std::string &option) const

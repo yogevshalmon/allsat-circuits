@@ -3,16 +3,13 @@
 #include <vector>
 
 #include "lorina/aiger.hpp"
-#include "AllSatGloblas.hpp"
-#include "AigAndGate.hpp"
-
-using namespace lorina;
-using namespace std;
+#include "Globals/AllSatGloblas.hpp"
+#include "Aiger/AigAndGate.hpp"
 
 /*
     parser for aiger, based on lorina
 */
-class AigerParser : public aiger_reader
+class AigerParser : public lorina::aiger_reader
 {
 public:
     AigerParser () {};
@@ -21,17 +18,17 @@ public:
     {
         if ( m == 0)
         {
-            throw runtime_error("Error when parsing AIG, max variable index is 0"); 
+            throw std::runtime_error("Error when parsing AIG, max variable index is 0"); 
         }
 
         if ( i == 0)
         {
-            throw runtime_error("Error when parsing AIG, no inputs provided"); 
+            throw std::runtime_error("Error when parsing AIG, no inputs provided"); 
         }
 
          if ( o > 1)
         {
-            throw runtime_error("Error when parsing AIG, please provide only 1 output"); 
+            throw std::runtime_error("Error when parsing AIG, please provide only 1 output"); 
         }
 
 
@@ -47,7 +44,7 @@ public:
     void on_header( uint64_t m, uint64_t i, uint64_t l, uint64_t o, uint64_t a,
                           uint64_t b, uint64_t c, uint64_t j, uint64_t f ) const override
     {
-        // TODO it seems lorina always call this header, remove output for now
+        // Note: it seems lorina always call this header, remove output for now
         // cout << "c Extended aiger format found, ignoring unsupported features." << endl;
 
         // just call normal header
@@ -80,27 +77,27 @@ public:
         m_IsVarRef[g_index] = true;
         if ( m_IsVarRef[AIGLitToAIGIndex(left_lit)] == false || m_IsVarRef[AIGLitToAIGIndex(right_lit)] == false)
         {
-           throw runtime_error("Error when parsing AIG, an AND gate reference unkown or not intorduce literals " + to_string(left_lit) + ", " + to_string(right_lit)); 
+           throw std::runtime_error("Error when parsing AIG, an AND gate reference unkown or not intorduce literals " + std::to_string(left_lit) + ", " + std::to_string(right_lit)); 
         }
 
         m_AndGates.push_back(AigAndGate(AIGIndexToAIGLit(g_index), left_lit, right_lit));
     }
 
-    const vector<AIGLIT>& GetInputs() const {return m_Inputs;};
+    const std::vector<AIGLIT>& GetInputs() const {return m_Inputs;};
 
-    const vector<AIGLIT>& GetOutputs() const {return m_Outputs;};
+    const std::vector<AIGLIT>& GetOutputs() const {return m_Outputs;};
 
-    const vector<AigAndGate>& GetAndGated() const {return m_AndGates;};
+    const std::vector<AigAndGate>& GetAndGated() const {return m_AndGates;};
 
-    const vector<bool>& GetIsIndexRef() const {return m_IsVarRef;};
+    const std::vector<bool>& GetIsIndexRef() const {return m_IsVarRef;};
 
     const AIGINDEX GetMaxIndex() const {return (AIGINDEX)m_IsVarRef.size();}
 
 protected:
 
-    mutable vector<AIGLIT> m_Inputs;
-    mutable vector<AIGLIT> m_Outputs;
-    mutable vector<AigAndGate> m_AndGates;
+    mutable std::vector<AIGLIT> m_Inputs;
+    mutable std::vector<AIGLIT> m_Outputs;
+    mutable std::vector<AigAndGate> m_AndGates;
     // hold all the actuall used vars
-    mutable vector<bool> m_IsVarRef;
+    mutable std::vector<bool> m_IsVarRef;
 };

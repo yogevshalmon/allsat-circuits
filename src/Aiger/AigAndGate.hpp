@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AllSatGloblas.hpp"
+#include "Globals/AllSatGloblas.hpp"
 
 /*
     Simple class for an aiger and gate
