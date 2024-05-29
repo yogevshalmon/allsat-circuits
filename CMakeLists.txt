@@ -115,7 +115,7 @@ if(IPASIR_SAT_SOLVER STREQUAL "CADICAL")
     # Add a custom target for manual configuration
     add_custom_target(cadical_configure
     
-        COMMAND configure
+        COMMAND ./configure
 
         WORKING_DIRECTORY ${LIB_PREFIX}/sat/cadical
     )
