@@ -482,39 +482,4 @@ i37 Gic5
 i38 Gic6
 i39 Gic7
 i40 Gr
-o0 God0
-o1 God1
-o2 God2
-o3 God3
-o4 God4
-o5 God5
-o6 God6
-o7 God7
-o8 God8
-o9 God9
-o10 God10
-o11 God11
-o12 God12
-o13 God13
-o14 God14
-o15 God15
-o16 God16
-o17 God17
-o18 God18
-o19 God19
-o20 God20
-o21 God21
-o22 God22
-o23 God23
-o24 God24
-o25 God25
-o26 God26
-o27 God27
-o28 God28
-o29 God29
-o30 God30
-o31 God31
-c
-/nfs/iil/proj/dt/prover01/yogevs/all_sat_enumer/aig-cnf/iscas85/data/c499
-This file was written by ABC on Tue Aug  1 10:03:46 2023
-For information about AIGER format, refer to http://fmv.jku.at/aiger
+o0 God31

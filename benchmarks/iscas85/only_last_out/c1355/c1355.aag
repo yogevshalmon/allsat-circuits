@@ -586,39 +586,4 @@ i37 G230gat
 i38 G231gat
 i39 G232gat
 i40 G233gat
-o0 G1324gat
-o1 G1325gat
-o2 G1326gat
-o3 G1327gat
-o4 G1328gat
-o5 G1329gat
-o6 G1330gat
-o7 G1331gat
-o8 G1332gat
-o9 G1333gat
-o10 G1334gat
-o11 G1335gat
-o12 G1336gat
-o13 G1337gat
-o14 G1338gat
-o15 G1339gat
-o16 G1340gat
-o17 G1341gat
-o18 G1342gat
-o19 G1343gat
-o20 G1344gat
-o21 G1345gat
-o22 G1346gat
-o23 G1347gat
-o24 G1348gat
-o25 G1349gat
-o26 G1350gat
-o27 G1351gat
-o28 G1352gat
-o29 G1353gat
-o30 G1354gat
-o31 G1355gat
-c
-/nfs/iil/proj/dt/prover01/yogevs/all_sat_enumer/aig-cnf/iscas85/data/c1355
-This file was written by ABC on Tue Aug  1 10:04:07 2023
-For information about AIGER format, refer to http://fmv.jku.at/aiger
+o0 G1355gat

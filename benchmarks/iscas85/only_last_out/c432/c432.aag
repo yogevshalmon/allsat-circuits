@@ -281,14 +281,4 @@ i32 G105gat
 i33 G108gat
 i34 G112gat
 i35 G115gat
-o0 G223gat
-o1 G329gat
-o2 G370gat
-o3 G421gat
-o4 G430gat
-o5 G431gat
-o6 G432gat
-c
-/nfs/iil/proj/dt/prover01/yogevs/all_sat_enumer/aig-cnf/iscas85/data/c432
-This file was written by ABC on Tue Aug  1 10:03:36 2023
-For information about AIGER format, refer to http://fmv.jku.at/aiger
+o0 G432gat

@@ -2401,39 +2401,4 @@ i28 G477gat
 i29 G494gat
 i30 G511gat
 i31 G528gat
-o0 G545gat
-o1 G1581gat
-o2 G1901gat
-o3 G2223gat
-o4 G2548gat
-o5 G2877gat
-o6 G3211gat
-o7 G3552gat
-o8 G3895gat
-o9 G4241gat
-o10 G4591gat
-o11 G4946gat
-o12 G5308gat
-o13 G5672gat
-o14 G5971gat
-o15 G6123gat
-o16 G6150gat
-o17 G6160gat
-o18 G6170gat
-o19 G6180gat
-o20 G6190gat
-o21 G6200gat
-o22 G6210gat
-o23 G6220gat
-o24 G6230gat
-o25 G6240gat
-o26 G6250gat
-o27 G6260gat
-o28 G6270gat
-o29 G6280gat
-o30 G6287gat
-o31 G6288gat
-c
-/nfs/iil/proj/dt/prover01/yogevs/all_sat_enumer/aig-cnf/iscas85/data/c6288
-This file was written by ABC on Tue Aug  1 10:04:35 2023
-For information about AIGER format, refer to http://fmv.jku.at/aiger
+o0 G6288gat

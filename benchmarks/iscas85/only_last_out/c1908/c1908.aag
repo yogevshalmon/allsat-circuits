@@ -480,32 +480,4 @@ i29 G900
 i30 G902
 i31 G952
 i32 G953
-o0 G3
-o1 G6
-o2 G9
-o3 G12
-o4 G30
-o5 G45
-o6 G48
-o7 G15
-o8 G18
-o9 G21
-o10 G24
-o11 G27
-o12 G33
-o13 G36
-o14 G39
-o15 G42
-o16 G75
-o17 G51
-o18 G54
-o19 G60
-o20 G63
-o21 G66
-o22 G69
-o23 G72
-o24 G57
-c
-/nfs/iil/proj/dt/prover01/yogevs/all_sat_enumer/aig-cnf/iscas85/data/c1908
-This file was written by ABC on Tue Aug  1 10:04:11 2023
-For information about AIGER format, refer to http://fmv.jku.at/aiger
+o0 G57

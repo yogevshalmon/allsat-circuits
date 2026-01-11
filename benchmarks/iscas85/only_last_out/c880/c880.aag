@@ -447,33 +447,4 @@ i56 G260gat
 i57 G261gat
 i58 G267gat
 i59 G268gat
-o0 G388gat
-o1 G389gat
-o2 G390gat
-o3 G391gat
-o4 G418gat
-o5 G419gat
-o6 G420gat
-o7 G421gat
-o8 G422gat
-o9 G423gat
-o10 G446gat
-o11 G447gat
-o12 G448gat
-o13 G449gat
-o14 G450gat
-o15 G767gat
-o16 G768gat
-o17 G850gat
-o18 G863gat
-o19 G864gat
-o20 G865gat
-o21 G866gat
-o22 G874gat
-o23 G878gat
-o24 G879gat
-o25 G880gat
-c
-/nfs/iil/proj/dt/prover01/yogevs/all_sat_enumer/aig-cnf/iscas85/data/c880
-This file was written by ABC on Tue Aug  1 10:03:57 2023
-For information about AIGER format, refer to http://fmv.jku.at/aiger
+o0 G880gat

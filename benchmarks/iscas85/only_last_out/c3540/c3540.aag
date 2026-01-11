@@ -1138,29 +1138,4 @@ i46 G330
 i47 G343
 i48 G1698
 i49 G2897
-o0 G353
-o1 G355
-o2 G361
-o3 G358
-o4 G351
-o5 G372
-o6 G369
-o7 G399
-o8 G364
-o9 G396
-o10 G384
-o11 G367
-o12 G387
-o13 G393
-o14 G390
-o15 G378
-o16 G375
-o17 G381
-o18 G407
-o19 G409
-o20 G405
-o21 G402
-c
-/nfs/iil/proj/dt/prover01/yogevs/all_sat_enumer/aig-cnf/iscas85/data/c3540
-This file was written by ABC on Tue Aug  1 10:04:25 2023
-For information about AIGER format, refer to http://fmv.jku.at/aiger
+o0 G402
