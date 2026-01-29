@@ -54,6 +54,9 @@ class AllSatAlgoBlockingBase : public AllSatAlgoBase
         const unsigned m_LitDropConflictLimit;
         // if to check unsat core with each drop lit check
         const bool m_LitDropChekRecurCore;
+        
+        // projection variables as comma-separated indices string
+        const std::string m_ProjectionVarsStr;
 
   
 		

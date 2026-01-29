@@ -2,10 +2,11 @@
 
 using namespace std;
 
-CirSim::CirSim(const AigerParser& aigerParser, SimStrat simStart):
+CirSim::CirSim(const AigerParser& aigerParser, SimStrat simStart, const std::unordered_set<AIGLIT>* projectionSet):
 m_Inputs(aigerParser.GetInputs()), m_Outputs(aigerParser.GetOutputs()), m_AndGates(aigerParser.GetAndGated()),
 m_MaxIndex(aigerParser.GetMaxIndex()),
-m_SimStart(simStart)
+m_SimStart(simStart),
+m_ProjectionSet(projectionSet)
 {
     m_IndexCurrVal.resize((size_t)GetNextAigIndex(), TVal::UnKown);
 
@@ -19,6 +20,16 @@ m_SimStart(simStart)
         m_IndexGatesWatch[AIGLitToAIGIndex(gate.GetR1())].push_back(gIndex);
     }
 };
+
+bool CirSim::IsProjectionVar(AIGLIT lit) const
+{
+    // If no projection set, all variables are considered projection variables
+    if (m_ProjectionSet == nullptr)
+    {
+        return true;
+    }
+    return m_ProjectionSet->find(lit) != m_ProjectionSet->end();
+}
 
 
 // initialVal contain the values to start simulate from
@@ -84,6 +95,12 @@ void CirSim::GenBotToTop()
     // now try to maximize the DC values
     for (const AIGLIT inputLit : m_Inputs)
     {
+        // Skip non-projection variables - they should remain at their current value
+        if (!IsProjectionVar(inputLit))
+        {
+            continue;
+        }
+
         // in case already Dont care case, can come from AllSatEnumerDualRail
         if (GetValForLit(inputLit) == TVal::DontCare)
         {
@@ -182,7 +199,9 @@ void CirSim::GenTopToBot()
 
     for (const AIGLIT inputLit : m_Inputs)
     {
-        if (!isConstReq[AIGLitToAIGIndex(inputLit)])
+        // Only set to DC if it's a projection variable and not required to be constant
+        // Non-projection variables keep their current (constant) values
+        if (IsProjectionVar(inputLit) && !isConstReq[AIGLitToAIGIndex(inputLit)])
         {
             AssignValForLit(inputLit, TVal::DontCare);
         }

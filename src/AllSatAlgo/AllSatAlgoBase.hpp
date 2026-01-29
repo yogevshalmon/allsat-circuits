@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <unordered_set>
 
 #include "Globals/AllSatGloblas.hpp"
 #include "Globals/AllSatSolverGloblas.hpp"
@@ -62,6 +63,8 @@ class AllSatAlgoBase
         const bool m_UseTimeOut;
         // timeout
         const double m_TimeOut;
+        // if to use projection (enumerate only subset of inputs)
+        bool m_UseProjection;
 		
         // *** Variables ***
         
@@ -72,6 +75,33 @@ class AllSatAlgoBase
         std::vector<AIGLIT> m_Inputs;
         // size of m_Inputs
         size_t m_InputSize;
+        
+        // *** Projection Variables ***
+        
+        // subset of inputs to project onto (only these are enumerated/blocked)
+        std::vector<AIGLIT> m_ProjectionInputs;
+        // size of m_ProjectionInputs
+        size_t m_ProjectionSize;
+        // set for O(1) lookup of projection variables
+        std::unordered_set<AIGLIT> m_ProjectionSet;
+        
+        // *** Projection Helper Methods ***
+        
+        // check if a variable is in the projection set
+        bool IsProjectionVar(AIGLIT lit) const;
+        
+        // initialize projection from comma-separated indices string
+        // returns false if any index is invalid
+        bool InitializeProjection(const std::string& projectionIndices);
+        
+        // filter assignment to only include projection variables
+        INPUT_ASSIGNMENT FilterToProjection(const INPUT_ASSIGNMENT& assignment) const;
+        
+        // count don't-cares only among projection variables
+        unsigned GetNumOfDCFromProjectedAssignment(const INPUT_ASSIGNMENT& assignment) const;
+        
+        // print only projection variable assignments
+        void PrintEnumrProjected(const INPUT_ASSIGNMENT& model);
 
 		// *** Stats ***
 

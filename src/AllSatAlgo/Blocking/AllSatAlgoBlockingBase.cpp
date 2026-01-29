@@ -17,6 +17,8 @@ m_UseLitDrop(inputParser.getBoolCmdOption("/alg/blocking/use_lit_drop", true)),
 m_LitDropConflictLimit(inputParser.getUintCmdOption("/alg/blocking/lit_drop_conflict_limit", 0)),
 // default is false
 m_LitDropChekRecurCore(inputParser.getBoolCmdOption("/alg/blocking/lit_drop_recur_ucore", false)),
+// projection variables as comma-separated indices (empty = no projection)
+m_ProjectionVarsStr(inputParser.getCmdOption("/general/projection_vars")),
 m_Solver(nullptr), 
 m_DualSolver(nullptr), 
 m_CirSimulation(nullptr)
@@ -34,15 +36,24 @@ void AllSatAlgoBlockingBase::InitializeWithAIGFile(const string& filename)
 {
     ParseAigFile(filename);
 
-    // initilize tersim if needed
-    if (m_UseCirSim)
-    {
-        m_CirSimulation = new CirSim(m_AigParser, m_UseTopToBotSim ? SimStrat::TopToBot : SimStrat::BotToTop);
-    }
-
     m_Inputs = m_AigParser.GetInputs();
     m_InputSize = m_Inputs.size();
 
+    // Initialize projection if specified
+    if (!m_ProjectionVarsStr.empty())
+    {
+        if (!InitializeProjection(m_ProjectionVarsStr))
+        {
+            throw runtime_error("Failed to initialize projection variables");
+        }
+    }
+
+    // initilize tersim if needed
+    if (m_UseCirSim)
+    {
+        m_CirSimulation = new CirSim(m_AigParser, m_UseTopToBotSim ? SimStrat::TopToBot : SimStrat::BotToTop, 
+                                     m_UseProjection ? &m_ProjectionSet : nullptr);
+    }
 
     m_Solver->InitializeSolver(m_AigParser);
 
@@ -55,6 +66,9 @@ void AllSatAlgoBlockingBase::FindAllEnumer()
     PrintInitialInformation();
 
     int res = m_Solver->Solve();
+
+    // Determine the effective input size for statistics (projection or all inputs)
+    size_t effectiveInputSize = m_UseProjection ? m_ProjectionSize : m_InputSize;
 
     while( res == SAT_RET_STATUS)
     {
@@ -73,10 +87,13 @@ void AllSatAlgoBlockingBase::FindAllEnumer()
             break;
         }
 
-        unsigned currNumOfDC = GetNumOfDCFromInputAssignment(minAssignment); 
+        // Get don't-care count based on projection mode
+        unsigned currNumOfDC = m_UseProjection ? 
+            GetNumOfDCFromProjectedAssignment(minAssignment) : 
+            GetNumOfDCFromInputAssignment(minAssignment); 
 
-        // no blocking clause, all inputs are DC -> tautology
-        if (currNumOfDC == m_InputSize)
+        // no blocking clause, all (projected) inputs are DC -> tautology
+        if (currNumOfDC == effectiveInputSize)
         {
             cout << "c Tautology found" << endl;
         }
@@ -84,7 +101,14 @@ void AllSatAlgoBlockingBase::FindAllEnumer()
         {
             if (m_PrintEnumer)
             {
-                PrintEnumr(minAssignment);
+                if (m_UseProjection)
+                {
+                    PrintEnumrProjected(minAssignment);
+                }
+                else
+                {
+                    PrintEnumr(minAssignment);
+                }
             }
         }
 
@@ -92,11 +116,11 @@ void AllSatAlgoBlockingBase::FindAllEnumer()
         m_NumberOfModels = m_NumberOfModels + (unsigned long long)pow(2,currNumOfDC);
         m_NumberOfAssg++;
 
-        m_DontCarePrecSum += (double)currNumOfDC/(double)m_InputSize;
+        m_DontCarePrecSum += (double)currNumOfDC/(double)effectiveInputSize;
 
   
         // block with the blocking clause before calling next SAT
-        // in case of tautology -> blocking clause is empty casue to exist next 
+        // For projection: BlockModel should only block on projection variables
         BlockModel(minAssignment);
 
         res = m_Solver->Solve();      
@@ -123,6 +147,11 @@ void AllSatAlgoBlockingBase::PrintInitialInformation()
     AllSatAlgoBase::PrintInitialInformation();
 
     cout << "c Use Blocking based algorithm" << endl;
+
+    if (m_UseProjection)
+    {
+        cout << "c Use Projected enumeration with " << m_ProjectionSize << " projection variables" << endl;
+    }
 
     if (m_UseCirSim)
     {

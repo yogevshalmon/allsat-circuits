@@ -58,5 +58,7 @@ INPUT_ASSIGNMENT AllSatAlgoTseitinEnc::GeneralizeModel(const INPUT_ASSIGNMENT& m
 
 void AllSatAlgoTseitinEnc::BlockModel(const INPUT_ASSIGNMENT& model)
 { 
-    m_Solver->BlockAssignment(model);
+    // For projected enumeration, only block on projection variables
+    INPUT_ASSIGNMENT blockingModel = m_UseProjection ? FilterToProjection(model) : model;
+    m_Solver->BlockAssignment(blockingModel);
 };

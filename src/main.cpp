@@ -49,6 +49,8 @@ void PrintUsage()
     cout << "General:" << endl;
     cout << "[</general/timeout> <value>] provide timeout in seconds, if <value> not provided use default of 3600 sec" << endl;
     cout << "[</general/print_enumer> <0|1>] represent if to print the enumerations found" << endl;
+    cout << "[</general/projection_vars> <indices>] comma-separated AIGER input indices for projected enumeration" << endl;
+    cout << "   Example: /general/projection_vars 1,3,5 - only enumerate over inputs with AIGINDEX 1, 3, and 5" << endl;
 
     cout << endl;
     cout << "Algorithm parameters:" << endl;
