@@ -51,7 +51,9 @@ INPUT_ASSIGNMENT AllSatAlgoTseitinEnc::GeneralizeModel(const INPUT_ASSIGNMENT& m
     }
     if (m_UseDualSolver)
     {
-        generalizeModel = m_DualSolver->GetUnSATCore(generalizeModel, m_UseLitDrop, m_LitDropConflictLimit, m_LitDropChekRecurCore);
+        // Pass projection set to prioritize keeping projection vars in core
+        generalizeModel = m_DualSolver->GetUnSATCore(generalizeModel, m_UseLitDrop, m_LitDropConflictLimit, m_LitDropChekRecurCore,
+                                                     m_UseProjection ? &m_ProjectionSet : nullptr);
     }
     return generalizeModel;
 };
