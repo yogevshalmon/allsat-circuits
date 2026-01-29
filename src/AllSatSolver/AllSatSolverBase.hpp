@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_set>
 
 #include "Globals/AllSatGloblas.hpp"
 #include "Globals/AllSatSolverGloblas.hpp"
@@ -89,7 +90,9 @@ class AllSatSolverBase
         // useLitDrop - if to use literal dropping startegy
         // dropt_lit_conflict_limit - limit the conflict limit for each check for drop lit
         // useRecurUnCore - if to use unsat core extraction recursivly with each drop lit check
-        INPUT_ASSIGNMENT GetUnSATCore(const INPUT_ASSIGNMENT& initialValues, bool useLitDrop = false, int dropt_lit_conflict_limit = -1, bool useRecurUnCore = false);
+        // projectionSet - if provided, prioritize dropping non-projection vars first during lit drop
+        INPUT_ASSIGNMENT GetUnSATCore(const INPUT_ASSIGNMENT& initialValues, bool useLitDrop = false, int dropt_lit_conflict_limit = -1, bool useRecurUnCore = false,
+                                      const std::unordered_set<AIGLIT>* projectionSet = nullptr);
         
         // block the current assignment
         // currently blockNoRep only work for dual-rail encoding

@@ -169,7 +169,8 @@ INPUT_ASSIGNMENT AllSatSolverBase::GetAssignmentForAIGLits(const vector<AIGLIT>&
 }
 
 
-INPUT_ASSIGNMENT AllSatSolverBase::GetUnSATCore(const INPUT_ASSIGNMENT& initialValues, bool useLitDrop, int dropt_lit_conflict_limit, bool useRecurUnCore)
+INPUT_ASSIGNMENT AllSatSolverBase::GetUnSATCore(const INPUT_ASSIGNMENT& initialValues, bool useLitDrop, int dropt_lit_conflict_limit, bool useRecurUnCore,
+                                                const std::unordered_set<AIGLIT>* projectionSet)
 {
     // valid return status should be unsat
     SOLVER_RET_STATUS resStatus = UNSAT_RET_STATUS;
@@ -264,22 +265,52 @@ INPUT_ASSIGNMENT AllSatSolverBase::GetUnSATCore(const INPUT_ASSIGNMENT& initialV
     // try to drop literals from the unSAT core and check if still Unsat
     if (useLitDrop)
     {
-        // iterating from back to begin to support remove and iteration of vector
-        for (int assumpIndex = litDropAsmpForSolver.size() - 1; assumpIndex >= 0; --assumpIndex) 
-        {
-            // Temporary store the current assump lit
-            SATLIT tempLit = litDropAsmpForSolver[assumpIndex];
+        // Helper lambda to check if a variable is a projection variable
+        auto isProjectionVar = [&projectionSet](AIGLIT lit) -> bool {
+            if (projectionSet == nullptr) return true; // no projection, treat all as projection
+            return projectionSet->find(lit) != projectionSet->end();
+        };
 
-            // Remove the current lit from the, copy the last element
-            litDropAsmpForSolver[assumpIndex] = litDropAsmpForSolver.back();
-            litDropAsmpForSolver.pop_back();
+        // Build iteration order: only projection vars (we only care about making these DC)
+        // Non-projection vars are kept in core but we don't try to drop them
+        vector<int> iterationOrder;
+        for (int i = (int)coreValues.size() - 1; i >= 0; --i)
+        {
+            // Only try to drop projection variables
+            // Non-projection vars don't affect blocking, so no need to try dropping them
+            if (isProjectionVar(coreValues[i].first))
+            {
+                iterationOrder.push_back(i);
+            }
+        }
+
+        // Track which indices have been removed
+        vector<bool> removed(coreValues.size(), false);
+
+        for (int assumpIndex : iterationOrder) 
+        {
+            // Skip if already removed
+            if (removed[assumpIndex])
+            {
+                continue;
+            }
+
+            // Build assumption vector without this literal
+            vector<SATLIT> testAssump;
+            for (size_t i = 0; i < litDropAsmpForSolver.size(); ++i)
+            {
+                if (i != (size_t)assumpIndex && !removed[i])
+                {
+                    testAssump.push_back(litDropAsmpForSolver[i]);
+                }
+            }
 
             if (dropt_lit_conflict_limit > 0)
             {
                 SetConflictLimit(dropt_lit_conflict_limit);
             }
 
-            resStatus = SolveUnderAssump(litDropAsmpForSolver);
+            resStatus = SolveUnderAssump(testAssump);
 
             // in case of timeout, exit and then return the current core
             if (resStatus == TIMEOUT_RET_STATUS)
@@ -289,36 +320,38 @@ INPUT_ASSIGNMENT AllSatSolverBase::GetUnSATCore(const INPUT_ASSIGNMENT& initialV
            
             if (resStatus == UNSAT_RET_STATUS) 
             {
-                // TODO change erase to more effienct without order?
                 // still unsat we can remove the correspond lit assignment from the core
-                coreValues.erase(coreValues.begin() + assumpIndex);
+                removed[assumpIndex] = true;
 
                 if (useRecurUnCore)
                 {
-                    // check recursive the UnsatCore
-                    for (int newCoreassumPos = assumpIndex - 1; newCoreassumPos >= 0; --newCoreassumPos)
+                    // check recursive the UnsatCore - mark removed any not in new core
+                    for (size_t newCoreassumPos = 0; newCoreassumPos < litDropAsmpForSolver.size(); ++newCoreassumPos)
                     {
-                        if (!IsAssumptionRequired(newCoreassumPos))
+                        if (!removed[newCoreassumPos] && !IsAssumptionRequired(newCoreassumPos))
                         {
-                            litDropAsmpForSolver.erase(litDropAsmpForSolver.begin() + newCoreassumPos);
-                            coreValues.erase(coreValues.begin() + newCoreassumPos);
-                            // reduce the current index also, skipping the removed stuff
-                            assumpIndex--;
+                            removed[newCoreassumPos] = true;
                         }
                     }
                 }
             } 
-            else if (resStatus == SAT_RET_STATUS) 
-            {
-                // we can not remove the lit from the core
-                // restore the lit to the vector, where the position is changed (should not be a problem)
-                litDropAsmpForSolver.push_back(tempLit);
-            }
-            else
+            else if (resStatus != SAT_RET_STATUS) 
             {
                 throw runtime_error("UnSAT core drop literal strategy return unkown status");
             }
+            // SAT_RET_STATUS: we can not remove the lit from the core, keep it
         }
+
+        // Build final coreValues from non-removed entries
+        INPUT_ASSIGNMENT finalCoreValues;
+        for (size_t i = 0; i < coreValues.size(); ++i)
+        {
+            if (!removed[i])
+            {
+                finalCoreValues.push_back(coreValues[i]);
+            }
+        }
+        coreValues = finalCoreValues;
     }
     
     return coreValues;
