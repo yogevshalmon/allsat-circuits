@@ -95,6 +95,10 @@ void AllSatAlgoBlockingBase::FindAllEnumer()
         // no blocking clause, all (projected) inputs are DC -> tautology
         if (currNumOfDC == effectiveInputSize)
         {
+            if (m_PrintEnumer)
+            {
+                cout << "s tautology" << endl;
+            }
             cout << "c Tautology found" << endl;
         }
         else
