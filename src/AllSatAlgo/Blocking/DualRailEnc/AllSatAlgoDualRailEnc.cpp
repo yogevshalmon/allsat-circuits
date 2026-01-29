@@ -106,5 +106,7 @@ INPUT_ASSIGNMENT AllSatAlgoDualRailEnc::GeneralizeModel(const INPUT_ASSIGNMENT& 
 
 void AllSatAlgoDualRailEnc::BlockModel(const INPUT_ASSIGNMENT& model)
 { 
-    m_Solver->BlockAssignment(model, m_BlockNoRep);
+    // For projected enumeration, only block on projection variables
+    INPUT_ASSIGNMENT blockingModel = m_UseProjection ? FilterToProjection(model) : model;
+    m_Solver->BlockAssignment(blockingModel, m_BlockNoRep);
 };

@@ -2,6 +2,7 @@
 
 #include <queue>
 #include <vector>
+#include <unordered_set>
 
 #include "Globals/AllSatGloblas.hpp"
 #include "Globals/AllSatSolverGloblas.hpp"
@@ -23,7 +24,8 @@ enum SimStrat : unsigned char
 class CirSim
 {
 public:
-    CirSim(const AigerParser& aigerParser, SimStrat simStart = SimStrat::BotToTop);
+    CirSim(const AigerParser& aigerParser, SimStrat simStart = SimStrat::BotToTop, 
+           const std::unordered_set<AIGLIT>* projectionSet = nullptr);
 
     // initialVal contain the values to start simulate from
     INPUT_ASSIGNMENT MaximizeDontCare(const INPUT_ASSIGNMENT& initialValues, const bool onlySatOut = true);
@@ -78,6 +80,13 @@ protected:
 
     // hold the startegy
     const SimStrat m_SimStart;
+    
+    // pointer to projection set (nullptr if no projection)
+    // only projection variables will be considered for don't-care conversion
+    const std::unordered_set<AIGLIT>* m_ProjectionSet;
+    
+    // check if a variable is in the projection set (or no projection is used)
+    bool IsProjectionVar(AIGLIT lit) const;
     
     // for every AIGINDEX hold the curr value for the simulation
     std::vector<TVal> m_IndexCurrVal;

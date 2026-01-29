@@ -1,5 +1,7 @@
 #include "AllSatAlgo/AllSatAlgoBase.hpp"
 
+#include <sstream>
+
 #include "Globals/AllSatAlgoGlobals.hpp"
 #include "Utilities/StringUtilities.hpp"
 
@@ -14,11 +16,14 @@ m_PrintEnumer(inputParser.getBoolCmdOption("/general/print_enumer", false)),
 m_UseTimeOut(inputParser.cmdOptionExists("/general/timeout")),
 // check if timeout is given in command
 m_TimeOut(inputParser.getUintCmdOption("/general/timeout", DEF_TIMEOUT)),
+// projection is disabled by default
+m_UseProjection(false),
 m_NumberOfAssg(0), 
 m_NumberOfModels(0), 
 m_IsTimeOut(false), 
 m_TimeOnGeneralization(0),
-m_DontCarePrecSum(0)
+m_DontCarePrecSum(0),
+m_ProjectionSize(0)
 {
     m_Clk = clock();
 }
@@ -159,4 +164,154 @@ unsigned AllSatAlgoBase::GetNumOfDCFromInputAssignment(const INPUT_ASSIGNMENT& a
     });
     assert(numOfBoolVal >= 0);
     return (unsigned)m_InputSize - (unsigned)numOfBoolVal;
+}
+
+// *** Projection Methods ***
+
+bool AllSatAlgoBase::IsProjectionVar(AIGLIT lit) const
+{
+    return m_ProjectionSet.find(lit) != m_ProjectionSet.end();
+}
+
+bool AllSatAlgoBase::InitializeProjection(const string& projectionIndices)
+{
+    if (projectionIndices.empty())
+    {
+        m_UseProjection = false;
+        return true;
+    }
+    
+    m_ProjectionInputs.clear();
+    m_ProjectionSet.clear();
+    
+    // Build a set of valid input AIGINDEXes for validation
+    unordered_set<AIGINDEX> validInputIndices;
+    for (AIGLIT lit : m_Inputs)
+    {
+        validInputIndices.insert(AIGLitToAIGIndex(lit));
+    }
+    
+    // Parse comma-separated AIGER indices
+    stringstream ss(projectionIndices);
+    string token;
+    
+    while (getline(ss, token, ','))
+    {
+        // Trim whitespace
+        size_t start = token.find_first_not_of(" \t");
+        size_t end = token.find_last_not_of(" \t");
+        if (start == string::npos)
+        {
+            continue; // empty token
+        }
+        token = token.substr(start, end - start + 1);
+        
+        try
+        {
+            AIGINDEX aigIndex = (AIGINDEX)stoul(token);
+            
+            // Validate that this AIGINDEX corresponds to an input
+            if (validInputIndices.find(aigIndex) == validInputIndices.end())
+            {
+                cerr << "Error: AIGINDEX " << aigIndex << " is not a valid input." << endl;
+                cerr << "Valid input indices are: ";
+                for (size_t i = 0; i < m_Inputs.size(); ++i)
+                {
+                    if (i > 0) cerr << ", ";
+                    cerr << AIGLitToAIGIndex(m_Inputs[i]);
+                }
+                cerr << endl;
+                return false;
+            }
+            
+            AIGLIT lit = AIGIndexToAIGLit(aigIndex);
+            
+            // Avoid duplicates
+            if (m_ProjectionSet.find(lit) == m_ProjectionSet.end())
+            {
+                m_ProjectionInputs.push_back(lit);
+                m_ProjectionSet.insert(lit);
+            }
+        }
+        catch (const exception& e)
+        {
+            cerr << "Error: Invalid projection AIGINDEX '" << token << "': " << e.what() << endl;
+            return false;
+        }
+    }
+    
+    if (m_ProjectionInputs.empty())
+    {
+        cerr << "Error: No valid projection indices provided" << endl;
+        return false;
+    }
+    
+    m_ProjectionSize = m_ProjectionInputs.size();
+    m_UseProjection = true;
+    
+    return true;
+}
+
+INPUT_ASSIGNMENT AllSatAlgoBase::FilterToProjection(const INPUT_ASSIGNMENT& assignment) const
+{
+    if (!m_UseProjection)
+    {
+        return assignment;
+    }
+    
+    INPUT_ASSIGNMENT filtered;
+    filtered.reserve(m_ProjectionSize);
+    
+    for (const pair<AIGLIT, TVal>& assign : assignment)
+    {
+        if (IsProjectionVar(assign.first))
+        {
+            filtered.push_back(assign);
+        }
+    }
+    
+    return filtered;
+}
+
+unsigned AllSatAlgoBase::GetNumOfDCFromProjectedAssignment(const INPUT_ASSIGNMENT& assignment) const
+{
+    if (!m_UseProjection)
+    {
+        return GetNumOfDCFromInputAssignment(assignment);
+    }
+    
+    // Count boolean values only among projection variables
+    unsigned numOfBoolVal = 0;
+    for (const pair<AIGLIT, TVal>& assign : assignment)
+    {
+        if (IsProjectionVar(assign.first))
+        {
+            if (assign.second == TVal::True || assign.second == TVal::False)
+            {
+                numOfBoolVal++;
+            }
+        }
+    }
+    
+    return (unsigned)m_ProjectionSize - numOfBoolVal;
+}
+
+void AllSatAlgoBase::PrintEnumrProjected(const INPUT_ASSIGNMENT& model)
+{
+    if (!m_UseProjection)
+    {
+        PrintEnumr(model);
+        return;
+    }
+    
+    // Print only projection variables
+    for (const pair<AIGLIT, TVal>& assign : model)
+    {
+        if (IsProjectionVar(assign.first))
+        {
+            PrintLitVal(assign.first, assign.second);
+        }
+    }
+    
+    cout << endl;
 }
