@@ -9,7 +9,7 @@ class AllSatAlgoDualRailEnc : public AllSatAlgoBlockingBase
 {
     public:
 
-        AllSatAlgoDualRailEnc(const InputParser& inputParser);
+        AllSatAlgoDualRailEnc(const AllSatConfig& config);
 
         ~AllSatAlgoDualRailEnc();
 

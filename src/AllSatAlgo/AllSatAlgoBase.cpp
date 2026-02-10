@@ -1,23 +1,20 @@
 #include "AllSatAlgo/AllSatAlgoBase.hpp"
 
-#include <sstream>
-
-#include "Globals/AllSatAlgoGlobals.hpp"
 #include "Utilities/StringUtilities.hpp"
 
 using namespace std;
 using namespace lorina;
 
 
-AllSatAlgoBase::AllSatAlgoBase(const InputParser& inputParser):
+AllSatAlgoBase::AllSatAlgoBase(const AllSatConfig& config):
 // default is not printing
-m_PrintEnumer(inputParser.getBoolCmdOption("/general/print_enumer", false)),
+m_PrintEnumer(config.printEnumerations),
 // default is printing info
-m_PrintInfo(inputParser.getBoolCmdOption("/general/print_info", true)),
+m_PrintInfo(config.printInfo),
 // if timeout was given
-m_UseTimeOut(inputParser.cmdOptionExists("/general/timeout")),
+m_UseTimeOut(config.useTimeout),
 // check if timeout is given in command
-m_TimeOut(inputParser.getUintCmdOption("/general/timeout", DEF_TIMEOUT)),
+m_TimeOut(config.timeoutSeconds),
 // projection is disabled by default
 m_UseProjection(false),
 m_AigView(nullptr),
@@ -227,7 +224,7 @@ bool AllSatAlgoBase::IsProjectionVar(AIGLIT lit) const
     return m_ProjectionSet.find(lit) != m_ProjectionSet.end();
 }
 
-bool AllSatAlgoBase::InitializeProjection(const string& projectionIndices)
+bool AllSatAlgoBase::InitializeProjection(const vector<AIGINDEX>& projectionIndices)
 {
     if (projectionIndices.empty())
     {
@@ -245,51 +242,29 @@ bool AllSatAlgoBase::InitializeProjection(const string& projectionIndices)
         validInputIndices.insert(AIGLitToAIGIndex(lit));
     }
     
-    // Parse comma-separated AIGER indices
-    stringstream ss(projectionIndices);
-    string token;
-    while (getline(ss, token, ','))
+    for (AIGINDEX aigIndex : projectionIndices)
     {
-        // Trim whitespace
-        size_t start = token.find_first_not_of(" \t");
-        size_t end = token.find_last_not_of(" \t");
-        if (start == string::npos)
+        // Validate that this AIGINDEX corresponds to an input
+        if (validInputIndices.find(aigIndex) == validInputIndices.end())
         {
-            continue; // empty token
-        }
-        token = token.substr(start, end - start + 1);
-        
-        try
-        {
-            AIGINDEX aigIndex = (AIGINDEX)stoul(token);
-            
-            // Validate that this AIGINDEX corresponds to an input
-            if (validInputIndices.find(aigIndex) == validInputIndices.end())
+            cerr << "Error: AIGINDEX " << aigIndex << " is not a valid input." << endl;
+            cerr << "Valid input indices are: ";
+            for (size_t i = 0; i < m_Inputs.size(); ++i)
             {
-                cerr << "Error: AIGINDEX " << aigIndex << " is not a valid input." << endl;
-                cerr << "Valid input indices are: ";
-                for (size_t i = 0; i < m_Inputs.size(); ++i)
-                {
-                    if (i > 0) cerr << ", ";
-                    cerr << AIGLitToAIGIndex(m_Inputs[i]);
-                }
-                cerr << endl;
-                return false;
+                if (i > 0) cerr << ", ";
+                cerr << AIGLitToAIGIndex(m_Inputs[i]);
             }
-            
-            AIGLIT lit = AIGIndexToAIGLit(aigIndex);
-            
-            // Avoid duplicates
-            if (m_ProjectionSet.find(lit) == m_ProjectionSet.end())
-            {
-                m_ProjectionInputs.push_back(lit);
-                m_ProjectionSet.insert(lit);
-            }
-        }
-        catch (const exception& e)
-        {
-            cerr << "Error: Invalid projection AIGINDEX '" << token << "': " << e.what() << endl;
+            cerr << endl;
             return false;
+        }
+
+        AIGLIT lit = AIGIndexToAIGLit(aigIndex);
+
+        // Avoid duplicates
+        if (m_ProjectionSet.find(lit) == m_ProjectionSet.end())
+        {
+            m_ProjectionInputs.push_back(lit);
+            m_ProjectionSet.insert(lit);
         }
     }
     

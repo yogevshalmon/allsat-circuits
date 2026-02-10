@@ -8,7 +8,7 @@
 #include "Globals/AllSatSolverGloblas.hpp"
 #include "Aiger/AigerParser.hpp"
 #include "Aiger/IAigerView.hpp"
-#include "Utilities/InputParser.hpp"
+#include "Globals/AllSatConfig.hpp"
 
 /*
     base class for allsat algoirthm
@@ -18,7 +18,7 @@ class AllSatAlgoBase
 {
     public:
 
-        AllSatAlgoBase(const InputParser& inputParser);
+        AllSatAlgoBase(const AllSatConfig& config);
 
         virtual ~AllSatAlgoBase();
 
@@ -118,9 +118,9 @@ class AllSatAlgoBase
         // check if a variable is in the projection set
         bool IsProjectionVar(AIGLIT lit) const;
         
-        // initialize projection from comma-separated indices string
+        // initialize projection from a list of indices
         // returns false if any index is invalid
-        bool InitializeProjection(const std::string& projectionIndices);
+        bool InitializeProjection(const std::vector<AIGINDEX>& projectionIndices);
         
         // filter assignment to only include projection variables
         INPUT_ASSIGNMENT FilterToProjection(const INPUT_ASSIGNMENT& assignment) const;

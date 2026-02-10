@@ -1,18 +1,16 @@
 #include "AllSatSolver/Topor/AllSatSolverTopor.hpp"
 
-#include "Globals/AllSatAlgoGlobals.hpp"
-
 using namespace std;
 using namespace Topor;
 
-AllSatSolverTopor::AllSatSolverTopor(const InputParser& inputParser, const CirEncoding& enc, const bool isDual):
-AllSatSolverBase(inputParser, enc, isDual),
+AllSatSolverTopor::AllSatSolverTopor(const AllSatConfig& config, const CirEncoding& enc, const bool isDual):
+AllSatSolverBase(config, enc, isDual),
 // default is mode 5
-m_SatSolverMode(inputParser.getUintCmdOption("/sat_solver/intel_sat/mode", 5)),
+m_SatSolverMode(config.intelSatMode),
 // if timeout was given
-m_UseTimeOut(inputParser.cmdOptionExists("/general/timeout")),
+m_UseTimeOut(config.useTimeout),
 // check if timeout is given in command
-m_TimeOut(inputParser.getUintCmdOption("/general/timeout", DEF_TIMEOUT)),
+m_TimeOut(config.timeoutSeconds),
 m_ToporSolver(nullptr)
 {
     m_ToporSolver = new CTopor<SOLVER_LIT_SIZE, SOLVER_INDEX_SIZE, SOLVER_COMPRESS>();

@@ -7,7 +7,7 @@
 using namespace std;
 
 
-AllSatSolverBase::AllSatSolverBase(const InputParser& inputParser, const CirEncoding& enc, const bool isDual):
+AllSatSolverBase::AllSatSolverBase(const AllSatConfig&, const CirEncoding& enc, const bool isDual):
 // the desire encoding
 m_CirEncoding(enc),
 m_IsDual(isDual)

@@ -97,6 +97,36 @@ The following command reproduces this result by running HALL with the AIGER file
 ./hall_tool ../benchmarks/AND.aag /general/print_enumer 1
 ```
 
+## Library usage
+
+You can also use HALL as a C++ library. Presets provide baseline configurations and can be overridden per option:
+
+```cpp
+#include "allsat/AllSatLib.hpp"
+
+using allsat::AigBuilder;
+using allsat::EnumerateOptions;
+using allsat::Enumerator;
+
+AigBuilder builder;
+auto a = builder.AddInput();
+auto b = builder.AddInput();
+auto out = builder.AddAnd(a, b);
+builder.SetOutput(out);
+builder.Validate();
+
+EnumerateOptions options;
+options.preset = EnumerateOptions::Preset::Roc;
+options.useUcore = false; // override the preset
+options.useTimeout = true;
+options.timeoutSeconds = 60;
+options.projectionIndices = {1, 3, 5};
+options.printInfo = false;
+
+Enumerator enumerator(options);
+enumerator.Initialize(builder.GetView());
+```
+
 ### Disjoint vs. non-disjoint solutions
 
 An important feature in HALL is that it can generate disjoint or non-disjoint solutions, depending on the user needs, where disjoint solutions do not overlap, and non-disjoint solutions may overlap.
