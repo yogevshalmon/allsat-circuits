@@ -7,6 +7,7 @@
 #include "Globals/AllSatGloblas.hpp"
 #include "Globals/AllSatSolverGloblas.hpp"
 #include "Aiger/AigerParser.hpp"
+#include "Aiger/IAigerView.hpp"
 #include "Utilities/InputParser.hpp"
 
 /*
@@ -27,6 +28,12 @@ class AllSatAlgoBase
             throw std::runtime_error("Function not implemented"); 
         };
 
+        // initialize with an in-memory AIG view
+        virtual void InitializeWithAIG(const IAigerView& aiger)
+        {
+            throw std::runtime_error("Function not implemented");
+        };
+
         // find all enumeration 
         virtual void FindAllEnumer()
         { 
@@ -34,6 +41,18 @@ class AllSatAlgoBase
         };
 
         void PrintResult(bool wasInterrupted = false);
+
+        struct AllSatStats
+        {
+            unsigned long long numberOfAssignments;
+            unsigned long long numberOfModels;
+            double timeOnGeneralization;
+            double avgCardinality;
+            double cpuTimeSec;
+            bool isTimeout;
+        };
+
+        AllSatStats GetStats() const;
 
     protected:
 
@@ -43,6 +62,10 @@ class AllSatAlgoBase
         // parse aag or aig files
         // initilize m_AigParser
         void ParseAigFile(const std::string& filename);
+
+        void SetAigerView(const IAigerView& aiger);
+
+        const IAigerView& GetAigerView() const;
 
         // print single model enumeration
         void PrintEnumr(const INPUT_ASSIGNMENT& model);
@@ -59,6 +82,8 @@ class AllSatAlgoBase
 
         // if to print the enumerated assignments
         const bool m_PrintEnumer;
+        // if to print informational messages
+        const bool m_PrintInfo;
         // if timeout was given
         const bool m_UseTimeOut;
         // timeout
@@ -70,6 +95,9 @@ class AllSatAlgoBase
         
         // parser for Aiger 
         AigerParser m_AigParser;
+
+        // view of the current AIG (file-based or in-memory)
+        const IAigerView* m_AigView;
 
         // original inputs
         std::vector<AIGLIT> m_Inputs;

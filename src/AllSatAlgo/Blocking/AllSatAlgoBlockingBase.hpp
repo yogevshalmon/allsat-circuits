@@ -11,14 +11,30 @@ class AllSatAlgoBlockingBase : public AllSatAlgoBase
 {
     public:
 
+        enum class StepStatus : unsigned char
+        {
+            Model,
+            Tautology,
+            Exhausted,
+            Timeout
+        };
+
         AllSatAlgoBlockingBase(const InputParser& inputParser);
 
         virtual ~AllSatAlgoBlockingBase();
 
         virtual void InitializeWithAIGFile(const std::string& filename);
 
+        virtual void InitializeWithAIG(const IAigerView& aiger);
+
         // find all enumeration with general blocking algo
         virtual void FindAllEnumer();
+
+        // start step-wise enumeration (for library usage)
+        void BeginEnumeration(bool printInitial = true);
+
+        // get next model or tautology
+        StepStatus NextModel(INPUT_ASSIGNMENT& outModel);
 
         void PrintResult(bool wasInterrupted = false);
 
@@ -26,6 +42,8 @@ class AllSatAlgoBlockingBase : public AllSatAlgoBase
 
         // print initial information, timeout etc..
         virtual void PrintInitialInformation();
+
+        void InitializeFromAiger(const IAigerView& aiger);
         
         INPUT_ASSIGNMENT GeneralizeWithCirSimulation(const INPUT_ASSIGNMENT& model);
 
@@ -68,6 +86,9 @@ class AllSatAlgoBlockingBase : public AllSatAlgoBase
         AllSatSolverBase* m_DualSolver;
         // cir simulation component
         CirSim* m_CirSimulation;
+
+        bool m_EnumerationStarted;
+        SOLVER_RET_STATUS m_PendingSolveStatus;
 
 
 		// *** Stats ***

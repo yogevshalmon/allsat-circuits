@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Topor.hpp"
+#include <iostream>
 
 // TODO enable this -> change SATLIT size to SOLVER_LIT_SIZE
 // define the lit size for topor

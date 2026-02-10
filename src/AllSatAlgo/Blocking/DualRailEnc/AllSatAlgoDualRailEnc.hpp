@@ -16,6 +16,8 @@ class AllSatAlgoDualRailEnc : public AllSatAlgoBlockingBase
         // override since we maybe want to use force polarity and boost score
         virtual void InitializeWithAIGFile(const std::string& filename);
 
+        virtual void InitializeWithAIG(const IAigerView& aiger);
+
     protected:
 
         // print initial information, timeout etc..

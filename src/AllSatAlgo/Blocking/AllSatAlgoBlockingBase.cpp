@@ -21,7 +21,9 @@ m_LitDropChekRecurCore(inputParser.getBoolCmdOption("/alg/blocking/lit_drop_recu
 m_ProjectionVarsStr(inputParser.getCmdOption("/general/projection_vars")),
 m_Solver(nullptr), 
 m_DualSolver(nullptr), 
-m_CirSimulation(nullptr)
+m_CirSimulation(nullptr),
+m_EnumerationStarted(false),
+m_PendingSolveStatus(UNSAT_RET_STATUS)
 {
 }
 
@@ -36,7 +38,21 @@ void AllSatAlgoBlockingBase::InitializeWithAIGFile(const string& filename)
 {
     ParseAigFile(filename);
 
-    m_Inputs = m_AigParser.GetInputs();
+    InitializeFromAiger(GetAigerView());
+}
+
+void AllSatAlgoBlockingBase::InitializeWithAIG(const IAigerView& aiger)
+{
+    SetAigerView(aiger);
+    InitializeFromAiger(aiger);
+}
+
+void AllSatAlgoBlockingBase::InitializeFromAiger(const IAigerView& aiger)
+{
+    m_EnumerationStarted = false;
+    m_PendingSolveStatus = UNSAT_RET_STATUS;
+
+    m_Inputs = aiger.GetInputs();
     m_InputSize = m_Inputs.size();
 
     // Initialize projection if specified
@@ -51,94 +67,153 @@ void AllSatAlgoBlockingBase::InitializeWithAIGFile(const string& filename)
     // initilize tersim if needed
     if (m_UseCirSim)
     {
-        m_CirSimulation = new CirSim(m_AigParser, m_UseTopToBotSim ? SimStrat::TopToBot : SimStrat::BotToTop, 
+        m_CirSimulation = new CirSim(aiger, m_UseTopToBotSim ? SimStrat::TopToBot : SimStrat::BotToTop,
                                      m_UseProjection ? &m_ProjectionSet : nullptr);
     }
 
-    m_Solver->InitializeSolver(m_AigParser);
+    m_Solver->InitializeSolver(aiger);
 
-    if (m_UseDualSolver) m_DualSolver->InitializeSolver(m_AigParser);
+    if (m_UseDualSolver)
+    {
+        m_DualSolver->InitializeSolver(aiger);
+    }
+}
 
+void AllSatAlgoBlockingBase::BeginEnumeration(bool printInitial)
+{
+    if (printInitial)
+    {
+        PrintInitialInformation();
+    }
+
+    m_EnumerationStarted = true;
+    m_PendingSolveStatus = m_Solver->Solve();
+}
+
+AllSatAlgoBlockingBase::StepStatus AllSatAlgoBlockingBase::NextModel(INPUT_ASSIGNMENT& outModel)
+{
+    if (!m_EnumerationStarted)
+    {
+        throw runtime_error("Enumeration has not been started");
+    }
+
+    if (m_PendingSolveStatus == TIMEOUT_RET_STATUS || m_IsTimeOut)
+    {
+        m_IsTimeOut = true;
+        return StepStatus::Timeout;
+    }
+
+    if (m_PendingSolveStatus == UNSAT_RET_STATUS)
+    {
+        return StepStatus::Exhausted;
+    }
+
+    if (m_PendingSolveStatus != SAT_RET_STATUS)
+    {
+        throw runtime_error("Solver returned unknown status");
+    }
+
+    INPUT_ASSIGNMENT initialAssignment = m_Solver->GetAssignmentForAIGLits(m_Inputs);
+
+    clock_t beforeGen = clock();
+    INPUT_ASSIGNMENT minAssignment = GeneralizeModel(initialAssignment);
+    unsigned long genCpuTimeTaken = clock() - beforeGen;
+    double genTime = (double)(genCpuTimeTaken) / (double)(CLOCKS_PER_SEC);
+
+    m_TimeOnGeneralization += genTime;
+
+    // if timeout exit skip check for tautology
+    if (m_IsTimeOut)
+    {
+        m_PendingSolveStatus = TIMEOUT_RET_STATUS;
+        return StepStatus::Timeout;
+    }
+
+    size_t effectiveInputSize = m_UseProjection ? m_ProjectionSize : m_InputSize;
+    unsigned currNumOfDC = m_UseProjection ?
+        GetNumOfDCFromProjectedAssignment(minAssignment) :
+        GetNumOfDCFromInputAssignment(minAssignment);
+
+    // no blocking clause, all (projected) inputs are DC -> tautology
+    if (currNumOfDC == effectiveInputSize)
+    {
+        if (m_PrintEnumer)
+        {
+            cout << "s tautology" << endl;
+        }
+        if (m_PrintInfo)
+        {
+            cout << "c Tautology found" << endl;
+        }
+        outModel.clear();
+    }
+    else
+    {
+        if (m_PrintEnumer)
+        {
+            if (m_UseProjection)
+            {
+                PrintEnumrProjected(minAssignment);
+            }
+            else
+            {
+                PrintEnumr(minAssignment);
+            }
+        }
+    }
+
+    // TODO handle overflow - currently not supported
+    m_NumberOfModels = m_NumberOfModels + (unsigned long long)pow(2, currNumOfDC);
+    m_NumberOfAssg++;
+
+    if (effectiveInputSize > 0)
+    {
+        m_DontCarePrecSum += (double)currNumOfDC / (double)effectiveInputSize;
+    }
+
+    // block with the blocking clause before calling next SAT
+    // For projection: BlockModel should only block on projection variables
+    BlockModel(minAssignment);
+
+    m_PendingSolveStatus = m_Solver->Solve();
+
+    if (currNumOfDC == effectiveInputSize)
+    {
+        return StepStatus::Tautology;
+    }
+
+    outModel = m_UseProjection ? FilterToProjection(minAssignment) : minAssignment;
+    return StepStatus::Model;
 }
 
 void AllSatAlgoBlockingBase::FindAllEnumer()
 {
-    PrintInitialInformation();
+    BeginEnumeration(true);
 
-    int res = m_Solver->Solve();
-
-    // Determine the effective input size for statistics (projection or all inputs)
-    size_t effectiveInputSize = m_UseProjection ? m_ProjectionSize : m_InputSize;
-
-    while( res == SAT_RET_STATUS)
+    INPUT_ASSIGNMENT model;
+    StepStatus res = StepStatus::Model;
+    while (true)
     {
-        INPUT_ASSIGNMENT initialAssignment = m_Solver->GetAssignmentForAIGLits(m_Inputs);
-        
-        clock_t beforeGen = clock();
-        INPUT_ASSIGNMENT minAssignment = GeneralizeModel(initialAssignment);
-        unsigned long genCpuTimeTaken =  clock() - beforeGen;
-        double genTime = (double)(genCpuTimeTaken)/(double)(CLOCKS_PER_SEC);
-
-        m_TimeOnGeneralization += genTime;
-
-        // if timeout exit skip check for tautology
-        if (m_IsTimeOut)
+        res = NextModel(model);
+        if (res == StepStatus::Model || res == StepStatus::Tautology)
         {
-            break;
+            continue;
         }
-
-        // Get don't-care count based on projection mode
-        unsigned currNumOfDC = m_UseProjection ? 
-            GetNumOfDCFromProjectedAssignment(minAssignment) : 
-            GetNumOfDCFromInputAssignment(minAssignment); 
-
-        // no blocking clause, all (projected) inputs are DC -> tautology
-        if (currNumOfDC == effectiveInputSize)
-        {
-            if (m_PrintEnumer)
-            {
-                cout << "s tautology" << endl;
-            }
-            cout << "c Tautology found" << endl;
-        }
-        else
-        {
-            if (m_PrintEnumer)
-            {
-                if (m_UseProjection)
-                {
-                    PrintEnumrProjected(minAssignment);
-                }
-                else
-                {
-                    PrintEnumr(minAssignment);
-                }
-            }
-        }
-
-        // TODO handle overflow - currently not supported
-        m_NumberOfModels = m_NumberOfModels + (unsigned long long)pow(2,currNumOfDC);
-        m_NumberOfAssg++;
-
-        m_DontCarePrecSum += (double)currNumOfDC/(double)effectiveInputSize;
-
-  
-        // block with the blocking clause before calling next SAT
-        // For projection: BlockModel should only block on projection variables
-        BlockModel(minAssignment);
-
-        res = m_Solver->Solve();      
+        break;
     }
 
-    if (res == TIMEOUT_RET_STATUS || m_IsTimeOut)
+    if (res == StepStatus::Timeout || m_IsTimeOut)
     {
-        cout << "c TIMEOUT reach" << endl;
+        if (m_PrintInfo)
+        {
+            cout << "c TIMEOUT reach" << endl;
+        }
         m_IsTimeOut = true;
         return;
     }
 
     // not unsat at the end
-    if (res != UNSAT_RET_STATUS)
+    if (res != StepStatus::Exhausted)
     {
         throw runtime_error("Last call wasnt UNSAT as expected");
     }
@@ -148,6 +223,10 @@ void AllSatAlgoBlockingBase::FindAllEnumer()
 
 void AllSatAlgoBlockingBase::PrintInitialInformation()
 {
+    if (!m_PrintInfo)
+    {
+        return;
+    }
     AllSatAlgoBase::PrintInitialInformation();
 
     cout << "c Use Blocking based algorithm" << endl;

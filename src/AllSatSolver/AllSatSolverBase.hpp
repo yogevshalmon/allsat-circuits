@@ -1,11 +1,12 @@
 #pragma once
 
-#include <vector>
+#include <stdexcept>
 #include <unordered_set>
+#include <vector>
 
 #include "Globals/AllSatGloblas.hpp"
 #include "Globals/AllSatSolverGloblas.hpp"
-#include "Aiger/AigerParser.hpp"
+#include "Aiger/IAigerView.hpp"
 #include "Utilities/InputParser.hpp"
 
 /*
@@ -39,7 +40,7 @@ class AllSatSolverBase
         }
 
         // initialize solver from aig
-        void InitializeSolver(const AigerParser& aigeParser);
+        void InitializeSolver(const IAigerView& aigeParser);
 
         // return ipasir status
         virtual SOLVER_RET_STATUS Solve()

@@ -66,8 +66,36 @@ void AllSatAlgoDualRailEnc::InitializeWithAIGFile(const string& filename)
 
 }
 
+void AllSatAlgoDualRailEnc::InitializeWithAIG(const IAigerView& aiger)
+{
+    AllSatAlgoBlockingBase::InitializeWithAIG(aiger);
+
+    for (AIGLIT inputLit: m_Inputs)
+    {
+        DRVAR inpurDr =  AIGLitToDR(inputLit);
+        // the fix polarity make max-sat approximation
+        if (m_DoForcePol)
+        {                  
+            m_Solver->FixPolarity(-GetPos(inpurDr));
+            m_Solver->FixPolarity(-GetNeg(inpurDr));
+        }
+
+        // and bump score
+        if (m_DoBoost)
+        {
+            m_Solver->BoostScore(abs(GetPos(inpurDr)));
+            m_Solver->BoostScore(abs(GetNeg(inpurDr)));
+        }
+    }
+
+}
+
 void AllSatAlgoDualRailEnc::PrintInitialInformation()
 {
+    if (!m_PrintInfo)
+    {
+        return;
+    }
     AllSatAlgoBlockingBase::PrintInitialInformation();
 
     cout << "c Use Dual-Rail encoding" << endl;

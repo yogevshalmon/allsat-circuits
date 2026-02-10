@@ -12,12 +12,15 @@ using namespace lorina;
 AllSatAlgoBase::AllSatAlgoBase(const InputParser& inputParser):
 // default is not printing
 m_PrintEnumer(inputParser.getBoolCmdOption("/general/print_enumer", false)),
+// default is printing info
+m_PrintInfo(inputParser.getBoolCmdOption("/general/print_info", true)),
 // if timeout was given
 m_UseTimeOut(inputParser.cmdOptionExists("/general/timeout")),
 // check if timeout is given in command
 m_TimeOut(inputParser.getUintCmdOption("/general/timeout", DEF_TIMEOUT)),
 // projection is disabled by default
 m_UseProjection(false),
+m_AigView(nullptr),
 m_NumberOfAssg(0), 
 m_NumberOfModels(0), 
 m_IsTimeOut(false), 
@@ -35,6 +38,10 @@ AllSatAlgoBase::~AllSatAlgoBase()
 
 void AllSatAlgoBase::PrintInitialInformation()
 {
+    if (!m_PrintInfo)
+    {
+        return;
+    }
     cout << "c Start enumerating AllSAT" << endl;
     #ifdef DEBUG
         cout << "c Tool is compiled in Debug" << endl;
@@ -76,10 +83,30 @@ void AllSatAlgoBase::ParseAigFile(const string& filename)
         throw runtime_error("Error parsing the file");
     }
 
+    SetAigerView(m_AigParser);
+
+}
+
+void AllSatAlgoBase::SetAigerView(const IAigerView& aiger)
+{
+    m_AigView = &aiger;
+}
+
+const IAigerView& AllSatAlgoBase::GetAigerView() const
+{
+    if (m_AigView == nullptr)
+    {
+        throw runtime_error("AIG view is not initialized");
+    }
+    return *m_AigView;
 }
 
 void AllSatAlgoBase::PrintResult(bool wasInterrupted)
 {
+    if (!m_PrintInfo)
+    {
+        return;
+    }
     bool isInterrupted = m_IsTimeOut || wasInterrupted;
     unsigned long cpu_time =  clock() - m_Clk;
     double Time = (double)(cpu_time)/(double)(CLOCKS_PER_SEC);
@@ -99,13 +126,40 @@ void AllSatAlgoBase::PrintResult(bool wasInterrupted)
         cout << "+";
     }
     cout << endl;
-    cout << "c Percentage of time spent on generalization: " << m_TimeOnGeneralization/Time;
+    cout << "c Percentage of time spent on generalization: " << (Time > 0.0 ? (m_TimeOnGeneralization / Time) : 0.0);
 
     cout << endl;
-    cout << "c Average Cardinality: " << (1 - m_DontCarePrecSum/(double)m_NumberOfAssg);
+    if (m_NumberOfAssg == 0)
+    {
+        cout << "c Average Cardinality: 0";
+    }
+    else
+    {
+        cout << "c Average Cardinality: " << (1 - m_DontCarePrecSum/(double)m_NumberOfAssg);
+    }
 
     cout << endl;
     cout << "c cpu time : " << Time <<" sec" << endl;
+}
+
+AllSatAlgoBase::AllSatStats AllSatAlgoBase::GetStats() const
+{
+    unsigned long cpu_time = clock() - m_Clk;
+    double timeSec = (double)(cpu_time) / (double)(CLOCKS_PER_SEC);
+    double avgCardinality = 0.0;
+    if (m_NumberOfAssg > 0)
+    {
+        avgCardinality = 1.0 - (m_DontCarePrecSum / (double)m_NumberOfAssg);
+    }
+
+    AllSatStats stats;
+    stats.numberOfAssignments = m_NumberOfAssg;
+    stats.numberOfModels = m_NumberOfModels;
+    stats.timeOnGeneralization = m_TimeOnGeneralization;
+    stats.avgCardinality = avgCardinality;
+    stats.cpuTimeSec = timeSec;
+    stats.isTimeout = m_IsTimeOut;
+    return stats;
 }
 
 // print value of a single AIG index
@@ -194,7 +248,6 @@ bool AllSatAlgoBase::InitializeProjection(const string& projectionIndices)
     // Parse comma-separated AIGER indices
     stringstream ss(projectionIndices);
     string token;
-    
     while (getline(ss, token, ','))
     {
         // Trim whitespace
