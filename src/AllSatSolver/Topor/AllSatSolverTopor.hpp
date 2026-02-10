@@ -14,7 +14,7 @@ class AllSatSolverTopor : public AllSatSolverBase
 {
     public:
 
-        AllSatSolverTopor(const InputParser& inputParser, const CirEncoding& enc, const bool isDual);
+        AllSatSolverTopor(const AllSatConfig& config, const CirEncoding& enc, const bool isDual);
 
         virtual ~AllSatSolverTopor();
 

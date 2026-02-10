@@ -9,7 +9,7 @@ class AllSatAlgoTseitinEnc : public AllSatAlgoBlockingBase
 {
     public:
 
-        AllSatAlgoTseitinEnc(const InputParser& inputParser);
+        AllSatAlgoTseitinEnc(const AllSatConfig& config);
 
         ~AllSatAlgoTseitinEnc();
 

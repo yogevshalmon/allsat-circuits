@@ -6,11 +6,11 @@
 #include <utility>
 #include <vector>
 
-#include "AllSatAlgo/Blocking/AllSatAlgoBlockingBase.hpp"
 #include "Aiger/AigerMemory.hpp"
 #include "Globals/AllSatGloblas.hpp"
 #include "Globals/TernaryVal.hpp"
-#include "Utilities/InputParser.hpp"
+
+class AllSatAlgoBlockingBase;
 
 namespace allsat
 {
@@ -127,6 +127,8 @@ class Enumerator
 public:
     explicit Enumerator(const EnumerateOptions& options);
 
+    ~Enumerator();
+
     void Initialize(const IAigerView& aiger);
 
     EnumerateStatus Next(Assignment& outModel);
@@ -135,8 +137,6 @@ public:
 
 private:
     EnumerateOptions m_Options;
-
-    std::unique_ptr<InputParser> m_InputParser;
     std::unique_ptr<AllSatAlgoBlockingBase> m_Algo;
 };
 

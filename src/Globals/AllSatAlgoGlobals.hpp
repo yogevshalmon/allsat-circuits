@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 static const unsigned DEF_TIMEOUT = 3600;
@@ -35,26 +34,4 @@ static const std::vector<std::string> MODES = {
     CORE_ALG,
     ROC_ALG,
     CARMA_ALG
-};
-
-
-static const std::unordered_map<std::string, std::vector<std::string>> MODE_PARAMS
-{
-    {TERSIM_ALG, {"/alg/blocking/use_cirsim","1"}},
-
-    {DRMS_DISJOINT_ALG, {"/alg/blocking/enc","dual_rail","/alg/blocking/dual_rail/boost_score","1","/alg/blocking/dual_rail/force_pol","1",
-    "/alg/blocking/dual_rail/block_no_rep","1"}},
-
-    {DRMS_NON_DISJOINT_ALG, {"/alg/blocking/enc","dual_rail","/alg/blocking/dual_rail/boost_score","1","/alg/blocking/dual_rail/force_pol","1",
-    "/alg/blocking/dual_rail/block_no_rep","0"}},
-
-    {COMB_DISJOINT_BLOCK_ALG, {"/alg/blocking/enc","dual_rail","/alg/blocking/dual_rail/boost_score","1","/alg/blocking/dual_rail/force_pol","1",
-    "/alg/blocking/dual_rail/block_no_rep","1","/alg/blocking/use_cirsim","1"}},
-
-    {CORE_ALG, {"/alg/blocking/use_ucore","1"}},
-
-    {ROC_ALG, {"/alg/blocking/use_cirsim","1","/alg/blocking/use_ucore","1"}},
-
-    {CARMA_ALG, {"/alg/blocking/enc","dual_rail","/alg/blocking/dual_rail/boost_score","1","/alg/blocking/dual_rail/force_pol","1",
-    "/alg/blocking/dual_rail/block_no_rep","1","/alg/blocking/use_ucore","1","/alg/blocking/dual_rail/use_tseitin_for_dual","1"}}    
 };

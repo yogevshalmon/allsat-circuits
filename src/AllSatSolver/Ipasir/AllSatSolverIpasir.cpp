@@ -1,16 +1,15 @@
 #include "AllSatSolver/Ipasir/AllSatSolverIpasir.hpp"
 
-#include "Globals/AllSatAlgoGlobals.hpp"
 #include "Globals/ipasir.h"
 
 using namespace std;
 
-AllSatSolverIpasir::AllSatSolverIpasir(const InputParser& inputParser, const CirEncoding& enc, const bool isDual):
-AllSatSolverBase(inputParser, enc, isDual),
+AllSatSolverIpasir::AllSatSolverIpasir(const AllSatConfig& config, const CirEncoding& enc, const bool isDual):
+AllSatSolverBase(config, enc, isDual),
 // if timeout was given
-m_UseTimeOut(inputParser.cmdOptionExists("/general/timeout")),
+m_UseTimeOut(config.useTimeout),
 // check if timeout is given in command
-m_TimeOut(inputParser.getUintCmdOption("/general/timeout", DEF_TIMEOUT)),
+m_TimeOut(config.timeoutSeconds),
 m_IpasirSolver(nullptr)
 {
     m_IpasirSolver = ipasir_init();

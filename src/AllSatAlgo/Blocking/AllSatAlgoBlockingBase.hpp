@@ -19,7 +19,7 @@ class AllSatAlgoBlockingBase : public AllSatAlgoBase
             Timeout
         };
 
-        AllSatAlgoBlockingBase(const InputParser& inputParser);
+        AllSatAlgoBlockingBase(const AllSatConfig& config);
 
         virtual ~AllSatAlgoBlockingBase();
 
@@ -73,8 +73,8 @@ class AllSatAlgoBlockingBase : public AllSatAlgoBase
         // if to check unsat core with each drop lit check
         const bool m_LitDropChekRecurCore;
         
-        // projection variables as comma-separated indices string
-        const std::string m_ProjectionVarsStr;
+        // projection variables indices
+        const std::vector<AIGINDEX> m_ProjectionIndices;
 
   
 		

@@ -2,18 +2,18 @@
 
 using namespace std;
 
-AllSatAlgoTseitinEnc::AllSatAlgoTseitinEnc(const InputParser& inputParser):
-AllSatAlgoBlockingBase(inputParser),
-m_UseIpaisrAsPrimary(inputParser.getBoolCmdOption("/alg/blocking/use_ipasir_for_plain", false)),
-m_UseIpaisrAsDual(inputParser.getBoolCmdOption("/alg/blocking/use_ipasir_for_dual", true))
+AllSatAlgoTseitinEnc::AllSatAlgoTseitinEnc(const AllSatConfig& config):
+AllSatAlgoBlockingBase(config),
+m_UseIpaisrAsPrimary(config.useIpasirForPlain),
+m_UseIpaisrAsDual(config.useIpasirForDual)
 {
     if (m_UseIpaisrAsPrimary)
     {
-        m_Solver = new AllSatSolverIpasir(inputParser, CirEncoding::TSEITIN_ENC, false);
+        m_Solver = new AllSatSolverIpasir(config, CirEncoding::TSEITIN_ENC, false);
     }
     else
     {
-        m_Solver = new AllSatSolverTopor(inputParser, CirEncoding::TSEITIN_ENC, false);
+        m_Solver = new AllSatSolverTopor(config, CirEncoding::TSEITIN_ENC, false);
     }
 
     
@@ -21,11 +21,11 @@ m_UseIpaisrAsDual(inputParser.getBoolCmdOption("/alg/blocking/use_ipasir_for_dua
     {
         if (m_UseIpaisrAsDual)
         {
-            m_DualSolver = new AllSatSolverIpasir(inputParser, CirEncoding::TSEITIN_ENC, true);
+            m_DualSolver = new AllSatSolverIpasir(config, CirEncoding::TSEITIN_ENC, true);
         }
         else
         {
-            m_DualSolver = new AllSatSolverTopor(inputParser, CirEncoding::TSEITIN_ENC, true);
+            m_DualSolver = new AllSatSolverTopor(config, CirEncoding::TSEITIN_ENC, true);
         }  
     } 
 }

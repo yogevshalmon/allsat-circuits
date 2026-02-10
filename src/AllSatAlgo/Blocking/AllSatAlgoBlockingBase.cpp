@@ -3,22 +3,22 @@
 using namespace std;
 
 
-AllSatAlgoBlockingBase::AllSatAlgoBlockingBase(const InputParser& inputParser):
-AllSatAlgoBase(inputParser),
+AllSatAlgoBlockingBase::AllSatAlgoBlockingBase(const AllSatConfig& config):
+AllSatAlgoBase(config),
 // defualt is false
-m_UseCirSim(inputParser.getBoolCmdOption("/alg/blocking/use_cirsim", false)),
+m_UseCirSim(config.useCirSim),
 // default is false
-m_UseTopToBotSim(inputParser.getBoolCmdOption("/alg/blocking/use_top_to_bot_sim", false)),
+m_UseTopToBotSim(config.useTopToBottomSim),
 // default is false
-m_UseDualSolver(inputParser.getBoolCmdOption("/alg/blocking/use_ucore", false)),
+m_UseDualSolver(config.useUcore),
 // default is true
-m_UseLitDrop(inputParser.getBoolCmdOption("/alg/blocking/use_lit_drop", true)),
+m_UseLitDrop(config.useLitDrop),
 // default is 0 i.e. none
-m_LitDropConflictLimit(inputParser.getUintCmdOption("/alg/blocking/lit_drop_conflict_limit", 0)),
+m_LitDropConflictLimit(config.litDropConflictLimit),
 // default is false
-m_LitDropChekRecurCore(inputParser.getBoolCmdOption("/alg/blocking/lit_drop_recur_ucore", false)),
-// projection variables as comma-separated indices (empty = no projection)
-m_ProjectionVarsStr(inputParser.getCmdOption("/general/projection_vars")),
+m_LitDropChekRecurCore(config.useLitDropRecur),
+// projection variables indices (empty = no projection)
+m_ProjectionIndices(config.projectionIndices),
 m_Solver(nullptr), 
 m_DualSolver(nullptr), 
 m_CirSimulation(nullptr),
@@ -56,9 +56,9 @@ void AllSatAlgoBlockingBase::InitializeFromAiger(const IAigerView& aiger)
     m_InputSize = m_Inputs.size();
 
     // Initialize projection if specified
-    if (!m_ProjectionVarsStr.empty())
+    if (!m_ProjectionIndices.empty())
     {
-        if (!InitializeProjection(m_ProjectionVarsStr))
+        if (!InitializeProjection(m_ProjectionIndices))
         {
             throw runtime_error("Failed to initialize projection variables");
         }

@@ -13,7 +13,7 @@ class AllSatSolverIpasir : public AllSatSolverBase
 {
     public:
 
-        AllSatSolverIpasir(const InputParser& inputParser, const CirEncoding& enc, const bool isDual);
+        AllSatSolverIpasir(const AllSatConfig& config, const CirEncoding& enc, const bool isDual);
 
         virtual ~AllSatSolverIpasir();
 

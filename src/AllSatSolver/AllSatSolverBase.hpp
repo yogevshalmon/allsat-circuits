@@ -7,7 +7,7 @@
 #include "Globals/AllSatGloblas.hpp"
 #include "Globals/AllSatSolverGloblas.hpp"
 #include "Aiger/IAigerView.hpp"
-#include "Utilities/InputParser.hpp"
+#include "Globals/AllSatConfig.hpp"
 
 /*
     base class for allsat solver
@@ -17,7 +17,7 @@ class AllSatSolverBase
 {
     public:
 
-        AllSatSolverBase(const InputParser& inputParser, const CirEncoding& enc, const bool isDual);
+        AllSatSolverBase(const AllSatConfig& config, const CirEncoding& enc, const bool isDual);
 
         virtual ~AllSatSolverBase() 
         {

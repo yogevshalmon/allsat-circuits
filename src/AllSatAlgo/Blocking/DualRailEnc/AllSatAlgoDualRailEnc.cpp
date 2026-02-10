@@ -2,37 +2,37 @@
 
 using namespace std;
 
-AllSatAlgoDualRailEnc::AllSatAlgoDualRailEnc(const InputParser& inputParser):
-AllSatAlgoBlockingBase(inputParser),
+AllSatAlgoDualRailEnc::AllSatAlgoDualRailEnc(const AllSatConfig& config):
+AllSatAlgoBlockingBase(config),
 // defualt is false
-m_BlockNoRep(inputParser.getBoolCmdOption("/alg/blocking/dual_rail/block_no_rep", false)),
+m_BlockNoRep(config.dualBlockNoRep),
 // default is false
-m_DoForcePol(inputParser.getBoolCmdOption("/alg/blocking/dual_rail/force_pol", false)),
+m_DoForcePol(config.dualForcePolarity),
 // default is false
-m_DoBoost(inputParser.getBoolCmdOption("/alg/blocking/dual_rail/boost_score", false)),
+m_DoBoost(config.dualBoostScore),
 // default is false
-m_UseTseitinEncForDual(inputParser.getBoolCmdOption("/alg/blocking/dual_rail/use_tseitin_for_dual", false)),
-m_UseIpaisrAsPrimary(inputParser.getBoolCmdOption("/alg/blocking/use_ipasir_for_plain", false)),
-m_UseIpaisrAsDual(inputParser.getBoolCmdOption("/alg/blocking/use_ipasir_for_dual", true))
+m_UseTseitinEncForDual(config.dualUseTseitinForDual),
+m_UseIpaisrAsPrimary(config.useIpasirForPlain),
+m_UseIpaisrAsDual(config.useIpasirForDual)
 {
     if (m_UseIpaisrAsPrimary)
     {
-        m_Solver = new AllSatSolverIpasir(inputParser, CirEncoding::DUALRAIL_ENC, false);
+        m_Solver = new AllSatSolverIpasir(config, CirEncoding::DUALRAIL_ENC, false);
     }
     else
     {
-        m_Solver = new AllSatSolverTopor(inputParser, CirEncoding::DUALRAIL_ENC, false);
+        m_Solver = new AllSatSolverTopor(config, CirEncoding::DUALRAIL_ENC, false);
     }
 
     if (m_UseDualSolver) 
     {
         if (m_UseIpaisrAsDual)
         {
-            m_DualSolver = new AllSatSolverIpasir(inputParser, m_UseTseitinEncForDual ? CirEncoding::TSEITIN_ENC : CirEncoding::DUALRAIL_ENC, true);
+            m_DualSolver = new AllSatSolverIpasir(config, m_UseTseitinEncForDual ? CirEncoding::TSEITIN_ENC : CirEncoding::DUALRAIL_ENC, true);
         }
         else
         {
-            m_DualSolver = new AllSatSolverTopor(inputParser, m_UseTseitinEncForDual ? CirEncoding::TSEITIN_ENC : CirEncoding::DUALRAIL_ENC, true);
+            m_DualSolver = new AllSatSolverTopor(config, m_UseTseitinEncForDual ? CirEncoding::TSEITIN_ENC : CirEncoding::DUALRAIL_ENC, true);
         }
     }
 }
