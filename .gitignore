@@ -2,3 +2,4 @@ build/*
 build_*/*
 debug/*
 .vscode/*
+standalone_test/simple_test
