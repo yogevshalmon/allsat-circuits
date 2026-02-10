@@ -2,3 +2,4 @@ build/*
 build_*/*
 debug/*
 .vscode/*
+libs/intel_sat_solver/*.a
