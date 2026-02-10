@@ -5,11 +5,12 @@
 #include "lorina/aiger.hpp"
 #include "Globals/AllSatGloblas.hpp"
 #include "Aiger/AigAndGate.hpp"
+#include "Aiger/IAigerView.hpp"
 
 /*
     parser for aiger, based on lorina
 */
-class AigerParser : public lorina::aiger_reader
+class AigerParser : public lorina::aiger_reader, public IAigerView
 {
 public:
     AigerParser () {};
@@ -83,15 +84,15 @@ public:
         m_AndGates.push_back(AigAndGate(AIGIndexToAIGLit(g_index), left_lit, right_lit));
     }
 
-    const std::vector<AIGLIT>& GetInputs() const {return m_Inputs;};
+    const std::vector<AIGLIT>& GetInputs() const override {return m_Inputs;};
 
-    const std::vector<AIGLIT>& GetOutputs() const {return m_Outputs;};
+    const std::vector<AIGLIT>& GetOutputs() const override {return m_Outputs;};
 
-    const std::vector<AigAndGate>& GetAndGated() const {return m_AndGates;};
+    const std::vector<AigAndGate>& GetAndGated() const override {return m_AndGates;};
 
-    const std::vector<bool>& GetIsIndexRef() const {return m_IsVarRef;};
+    const std::vector<bool>& GetIsIndexRef() const override {return m_IsVarRef;};
 
-    const AIGINDEX GetMaxIndex() const {return (AIGINDEX)m_IsVarRef.size();}
+    const AIGINDEX GetMaxIndex() const override {return (AIGINDEX)m_IsVarRef.size();}
 
 protected:
 

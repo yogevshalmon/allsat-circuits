@@ -7,7 +7,7 @@
 #include "Globals/AllSatGloblas.hpp"
 #include "Globals/AllSatSolverGloblas.hpp"
 #include "Globals/TernaryVal.hpp"
-#include "Aiger/AigerParser.hpp"
+#include "Aiger/IAigerView.hpp"
 
 // decide on the order of the simulation start
 enum SimStrat : unsigned char
@@ -24,7 +24,7 @@ enum SimStrat : unsigned char
 class CirSim
 {
 public:
-    CirSim(const AigerParser& aigerParser, SimStrat simStart = SimStrat::BotToTop, 
+    CirSim(const IAigerView& aigerParser, SimStrat simStart = SimStrat::BotToTop, 
            const std::unordered_set<AIGLIT>* projectionSet = nullptr);
 
     // initialVal contain the values to start simulate from

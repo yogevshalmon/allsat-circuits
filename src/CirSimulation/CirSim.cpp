@@ -1,8 +1,10 @@
 #include "CirSim.hpp"
+#include <stdexcept>
+#include <algorithm>
 
 using namespace std;
 
-CirSim::CirSim(const AigerParser& aigerParser, SimStrat simStart, const std::unordered_set<AIGLIT>* projectionSet):
+CirSim::CirSim(const IAigerView& aigerParser, SimStrat simStart, const std::unordered_set<AIGLIT>* projectionSet):
 m_Inputs(aigerParser.GetInputs()), m_Outputs(aigerParser.GetOutputs()), m_AndGates(aigerParser.GetAndGated()),
 m_MaxIndex(aigerParser.GetMaxIndex()),
 m_SimStart(simStart),

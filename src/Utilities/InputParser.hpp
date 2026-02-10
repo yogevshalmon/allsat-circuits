@@ -1,5 +1,10 @@
 #pragma once
 
+#include <algorithm>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 /*
 Simple input parser class, based on stackoverflow answer
 */
@@ -9,6 +14,11 @@ class InputParser
         InputParser (int &argc, char **argv){
             for (int i=1; i < argc; ++i)
                 this->tokens.push_back(std::string(argv[i]));
+        }
+
+        InputParser(const std::vector<std::string>& inTokens)
+            : tokens(inTokens)
+        {
         }
 
         void AppendParams(const std::vector<std::string>& params)

@@ -1,5 +1,9 @@
 #include "AllSatSolver/AllSatSolverBase.hpp"
 
+#include <algorithm>
+#include <iostream>
+#include <stdexcept>
+
 using namespace std;
 
 
@@ -15,7 +19,7 @@ const CirEncoding& AllSatSolverBase::GetEnc() const
     return m_CirEncoding;
 }
 
-void AllSatSolverBase::InitializeSolver(const AigerParser& aigeParser)
+void AllSatSolverBase::InitializeSolver(const IAigerView& aigeParser)
 { 
     AddClause(CONST_LIT_TRUE);
 

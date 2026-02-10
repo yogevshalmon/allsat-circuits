@@ -37,6 +37,10 @@ AllSatAlgoTseitinEnc::~AllSatAlgoTseitinEnc()
 
 void AllSatAlgoTseitinEnc::PrintInitialInformation()
 {
+    if (!m_PrintInfo)
+    {
+        return;
+    }
     AllSatAlgoBlockingBase::PrintInitialInformation();
 
     cout << "c Use Tseitin encoding" << endl;   
