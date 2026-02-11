@@ -28,7 +28,7 @@ jobs:
     - name: Build
       shell: msys2 {0}
       run: |
-        cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+        cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
         cmake --build build --target allsat
     
     - name: Package
