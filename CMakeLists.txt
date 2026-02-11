@@ -128,7 +128,7 @@ if(IPASIR_SAT_SOLVER STREQUAL "CADICAL")
     )
 
     add_custom_target(ipasir_sat_solver
-        COMMAND make
+        COMMAND make libcadical.a
         DEPENDS ${LIB_PREFIX}/sat/cadical/build/makefile
         WORKING_DIRECTORY ${LIB_PREFIX}/sat/cadical
     )
