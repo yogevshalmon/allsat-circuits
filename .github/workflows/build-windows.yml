@@ -11,7 +11,7 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
     
@@ -45,7 +45,7 @@ jobs:
         tar -czf hall-windows-x64.tar.gz package/
     
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: hall-windows-x64
         path: hall-windows-x64.tar.gz
