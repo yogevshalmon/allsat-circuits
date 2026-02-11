@@ -28,11 +28,12 @@ jobs:
     - name: Build
       shell: msys2 {0}
       run: |
-        # Fully build CaDiCaL first (configure + make)
+        # Fully build CaDiCaL library only (not mobical which needs sys/mman.h)
         cd libs/sat/cadical
         ./configure
-        make -j$(nproc)
-        cd ../../..
+        cd build
+        make libcadical.a -j$(nproc)
+        cd ../../../..
         
         # Fully build Intel SAT solver
         cd libs/intel_sat_solver
