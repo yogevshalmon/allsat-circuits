@@ -28,6 +28,17 @@ jobs:
     - name: Build
       shell: msys2 {0}
       run: |
+        # Pre-configure CaDiCaL to avoid CMake running it in cmd.exe
+        cd libs/sat/cadical
+        ./configure
+        cd ../../..
+        
+        # Pre-build Intel SAT solver
+        cd libs/intel_sat_solver
+        make libr
+        cd ../..
+        
+        # Now run CMake build
         cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
         cmake --build build --target allsat
     
