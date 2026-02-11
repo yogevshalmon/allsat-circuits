@@ -28,19 +28,24 @@ jobs:
     - name: Build
       shell: msys2 {0}
       run: |
-        # Pre-configure CaDiCaL to avoid CMake running it in cmd.exe
+        # Fully build CaDiCaL first (configure + make)
         cd libs/sat/cadical
         ./configure
+        make -j$(nproc)
         cd ../../..
         
-        # Pre-build Intel SAT solver
+        # Fully build Intel SAT solver
         cd libs/intel_sat_solver
-        make libr
+        make libr -j$(nproc)
         cd ../..
         
-        # Now run CMake build
-        cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-        cmake --build build --target allsat
+        # Touch the output files to prevent CMake from re-running custom targets
+        touch libs/sat/cadical/build/makefile
+        touch libs/sat/cadical/build/libcadical.a
+        
+        # Now run CMake build (dependencies already built)
+        cmake -S . -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+        cmake --build build --target allsat -j$(nproc)
     
     - name: Package
       shell: msys2 {0}
