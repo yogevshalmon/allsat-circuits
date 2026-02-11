@@ -1,0 +1,51 @@
+name: Build Windows Libraries
+
+on:
+  push:
+    branches: [ lib_interface, main ]
+  release:
+    types: [ created ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-ninja
+          make
+    
+    - name: Build
+      shell: msys2 {0}
+      run: |
+        cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --target allsat
+    
+    - name: Package
+      shell: msys2 {0}
+      run: |
+        mkdir -p package
+        cp -r include package/
+        cp -r src package/
+        cp build/liballsat.a package/
+        cp libs/sat/cadical/build/libcadical.a package/
+        cp libs/intel_sat_solver/libintel_sat_solver.a package/
+        cp standalone_test/simple_test.cpp package/
+        cp standalone_test/README.md package/
+        tar -czf hall-windows-x64.tar.gz package/
+    
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: hall-windows-x64
+        path: hall-windows-x64.tar.gz
