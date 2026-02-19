@@ -211,16 +211,18 @@ static void TestPartialModelEnumeration()
     AigBuilder builder;
     AIGLIT a   = builder.AddInput();
     AIGLIT b   = builder.AddInput();
-    AIGLIT c   = builder.AddInput();
     AIGLIT ab  = builder.AddAnd(a, b);
+    AIGLIT c   = builder.AddInput();
     AIGLIT out = builder.AddAnd(ab, c);
     builder.SetOutput(out);
     builder.Validate();
 
+    std::cout << "Testing partial model enumeration with projection onto {a, c} " << a << ", " << c << std::endl;
+
     EnumerateOptions options;
     options.printInfo = false;
     options.printEnumerations = false;
-    options.projectionIndices = {AIGLitToAIGIndex(a), AIGLitToAIGIndex(b)};
+    options.projectionIndices = {AIGLitToAIGIndex(a), AIGLitToAIGIndex(c)};
 
     Enumerator enumerator(options);
     enumerator.Initialize(builder.GetView());
@@ -228,28 +230,35 @@ static void TestPartialModelEnumeration()
     Assignment model;
     EnumerateStatus status = enumerator.Next(model);
     Require(status == EnumerateStatus::Model, "Expected one projected model");
-    Require(model.size() == 2, "Projected model must contain only a and b, not c");
+    Require(model.size() == 2, "Projected model must contain only a and c, not b");
 
-    bool foundA = false, foundB = false;
+    // print the model we got back for debugging
+    std::cout << "Projected model: ";
+    for (const auto& [lit, val] : model)
+    {
+        std::cout << (val == TVal::True ? "" : "-") << (lit/2) << " ";   
+    }
+    std::cout << std::endl;
+    bool foundA = false, foundC = false;
     for (const auto& entry : model)
     {
-        Require(entry.first != c, "c must not appear in projected model");
+        Require(entry.first != b, "b must not appear in projected model");
         if (entry.first == a)
         {
             foundA = true;
             Require(entry.second == TVal::True, "Expected a = True in projected model");
         }
-        else if (entry.first == b)
+        else if (entry.first == c)
         {
-            foundB = true;
-            Require(entry.second == TVal::True, "Expected b = True in projected model");
+            foundC = true;
+            Require(entry.second == TVal::True, "Expected c = True in projected model");
         }
         else
         {
             Require(false, "Unexpected literal in projected model");
         }
     }
-    Require(foundA && foundB, "Expected both a and b in projected model");
+    Require(foundA && foundC, "Expected both a and c in projected model");
 
     status = enumerator.Next(model);
     Require(status == EnumerateStatus::Exhausted, "Expected exhausted after one projected model");
