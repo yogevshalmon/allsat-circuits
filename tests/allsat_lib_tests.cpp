@@ -145,6 +145,116 @@ static AigerParser LoadAigerFromFile(const std::string& path)
     return parser;
 }
 
+static void TestNonConsecutiveInputs()
+{
+    // Reproduces the pattern: input, input, and, input, and
+    // The AND gate at index 3 shifts the third input to index 4 (lit 8),
+    // not the naive sequential index 3 (lit 6). The model must use the
+    // correct input literals, not gate literals.
+    AigBuilder builder;
+    AIGLIT a  = builder.AddInput();       // index 1, lit 2
+    AIGLIT b  = builder.AddInput();       // index 2, lit 4
+    AIGLIT g1 = builder.AddAnd(a, b);    // index 3, lit 6  (AND gate, NOT an input)
+    AIGLIT c  = builder.AddInput();       // index 4, lit 8  (non-consecutive!)
+    AIGLIT out = builder.AddAnd(g1, c);  // index 5, lit 10
+    builder.SetOutput(out);
+    builder.Validate();
+
+    EnumerateOptions options;
+    options.printInfo = false;
+    options.printEnumerations = false;
+
+    Enumerator enumerator(options);
+    enumerator.Initialize(builder.GetView());
+
+    // The only satisfying assignment is a=T, b=T, c=T
+    Assignment model;
+    EnumerateStatus status = enumerator.Next(model);
+    Require(status == EnumerateStatus::Model, "Expected one model for non-consecutive inputs");
+    Require(model.size() == 3, "Expected three literals in model");
+
+    // Each entry must be an input literal (2, 4, or 8), not the AND gate literal (6 or 10)
+    bool foundA = false, foundB = false, foundC = false;
+    for (const auto& entry : model)
+    {
+        if (entry.first == a)
+        {
+            foundA = true;
+            Require(entry.second == TVal::True, "Expected a = True");
+        }
+        else if (entry.first == b)
+        {
+            foundB = true;
+            Require(entry.second == TVal::True, "Expected b = True");
+        }
+        else if (entry.first == c)
+        {
+            foundC = true;
+            Require(entry.second == TVal::True, "Expected c = True");
+        }
+        else
+        {
+            Require(false, "AND gate literal returned in model instead of input literal");
+        }
+    }
+    Require(foundA && foundB && foundC, "Expected all three inputs in model");
+
+    status = enumerator.Next(model);
+    Require(status == EnumerateStatus::Exhausted, "Expected exactly one model for non-consecutive inputs");
+}
+
+static void TestPartialModelEnumeration()
+{
+    // Circuit: out = a AND b AND c
+    // Projection onto {a, b}: c must not appear in model output.
+    // The only satisfying complete assignment (a=T, b=T, c=T) projects to (a=T, b=T).
+    AigBuilder builder;
+    AIGLIT a   = builder.AddInput();
+    AIGLIT b   = builder.AddInput();
+    AIGLIT c   = builder.AddInput();
+    AIGLIT ab  = builder.AddAnd(a, b);
+    AIGLIT out = builder.AddAnd(ab, c);
+    builder.SetOutput(out);
+    builder.Validate();
+
+    EnumerateOptions options;
+    options.printInfo = false;
+    options.printEnumerations = false;
+    options.projectionIndices = {AIGLitToAIGIndex(a), AIGLitToAIGIndex(b)};
+
+    Enumerator enumerator(options);
+    enumerator.Initialize(builder.GetView());
+
+    Assignment model;
+    EnumerateStatus status = enumerator.Next(model);
+    Require(status == EnumerateStatus::Model, "Expected one projected model");
+    Require(model.size() == 2, "Projected model must contain only a and b, not c");
+
+    bool foundA = false, foundB = false;
+    for (const auto& entry : model)
+    {
+        Require(entry.first != c, "c must not appear in projected model");
+        if (entry.first == a)
+        {
+            foundA = true;
+            Require(entry.second == TVal::True, "Expected a = True in projected model");
+        }
+        else if (entry.first == b)
+        {
+            foundB = true;
+            Require(entry.second == TVal::True, "Expected b = True in projected model");
+        }
+        else
+        {
+            Require(false, "Unexpected literal in projected model");
+        }
+    }
+    Require(foundA && foundB, "Expected both a and b in projected model");
+
+    status = enumerator.Next(model);
+    Require(status == EnumerateStatus::Exhausted, "Expected exhausted after one projected model");
+}
+
 static void TestTimeoutStatus()
 {
     std::string path = ResolveTimeoutBenchmarkPath();
@@ -177,6 +287,8 @@ int main()
         TestAndGate();
         TestTautology();
         TestPresetOverride();
+        TestNonConsecutiveInputs();
+        TestPartialModelEnumeration();
         TestTimeoutStatus();
     }
     catch (const std::exception& ex)
