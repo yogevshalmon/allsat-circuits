@@ -58,7 +58,7 @@ This is a solver. A "harmless refactor" in the enumeration, generalization or si
 
 The highest-value tests are the brute-force ones: for a circuit small enough to evaluate exhaustively, the complete solution set is computed by hand and the enumeration is checked against it *exactly*, across every preset, projected and non-projected. That is what catches unsoundness — the failure mode that actually matters for an AllSAT tool, and the one that bit this codebase before. Prefer extending `TestRandomCircuitsAgainstBruteForce` / `TestNonDefaultOptionsAgainstBruteForce` over writing new hand-computed expectations.
 
-Helpers available: `EvaluateCircuit`, `BruteForceSolutions`, `Enumerate`, `ExpandCubes`, `CheckAgainstBruteForce`, `QuietOptions`, `SilencedCerr`.
+Helpers available: `EvaluateCircuit`, `BruteForceSolutions`, `Enumerate`, `ExpandCubes`, `CheckAgainstBruteForce`, `QuietOptions`.
 
 CI (`.github/workflows/build-linux.yml`) builds the default CaDiCaL configuration, runs the tests, smoke-tests the CLI, and builds the standalone example. Linux only — Windows support was removed deliberately. The other IPASIR backends are not in CI yet: MergeSAT fails to link because `libintel_sat_solver.a` ships a `Main.o` defining `main`, which collides with ours under that link order.
 

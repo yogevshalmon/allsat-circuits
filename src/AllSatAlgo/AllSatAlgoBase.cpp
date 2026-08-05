@@ -224,38 +224,40 @@ bool AllSatAlgoBase::IsProjectionVar(AIGLIT lit) const
     return m_ProjectionSet.find(lit) != m_ProjectionSet.end();
 }
 
-bool AllSatAlgoBase::InitializeProjection(const vector<AIGINDEX>& projectionIndices)
+void AllSatAlgoBase::InitializeProjection(const vector<AIGINDEX>& projectionIndices)
 {
     if (projectionIndices.empty())
     {
         m_UseProjection = false;
-        return true;
+        return;
     }
-    
+
     m_ProjectionInputs.clear();
     m_ProjectionSet.clear();
-    
+
     // Build a set of valid input AIGINDEXes for validation
     unordered_set<AIGINDEX> validInputIndices;
     for (AIGLIT lit : m_Inputs)
     {
         validInputIndices.insert(AIGLitToAIGIndex(lit));
     }
-    
+
     for (AIGINDEX aigIndex : projectionIndices)
     {
-        // Validate that this AIGINDEX corresponds to an input
+        // Validate that this AIGINDEX corresponds to an input.
+        // The detail goes into the exception rather than to stderr, so that it reaches
+        // both the tool (which prints what it caught) and library users (who can catch
+        // it), instead of being written to a stream nobody asked us to write to.
         if (validInputIndices.find(aigIndex) == validInputIndices.end())
         {
-            cerr << "Error: AIGINDEX " << aigIndex << " is not a valid input." << endl;
-            cerr << "Valid input indices are: ";
+            string message = "AIGINDEX " + to_string(aigIndex) +
+                             " is not a valid input, valid input indices are: ";
             for (size_t i = 0; i < m_Inputs.size(); ++i)
             {
-                if (i > 0) cerr << ", ";
-                cerr << AIGLitToAIGIndex(m_Inputs[i]);
+                if (i > 0) message += ", ";
+                message += to_string(AIGLitToAIGIndex(m_Inputs[i]));
             }
-            cerr << endl;
-            return false;
+            throw runtime_error(message);
         }
 
         AIGLIT lit = AIGIndexToAIGLit(aigIndex);
@@ -267,17 +269,11 @@ bool AllSatAlgoBase::InitializeProjection(const vector<AIGINDEX>& projectionIndi
             m_ProjectionSet.insert(lit);
         }
     }
-    
-    if (m_ProjectionInputs.empty())
-    {
-        cerr << "Error: No valid projection indices provided" << endl;
-        return false;
-    }
-    
+
+    // projectionIndices is not empty and every index was accepted above, so at least
+    // one projection input was recorded
     m_ProjectionSize = m_ProjectionInputs.size();
     m_UseProjection = true;
-    
-    return true;
 }
 
 INPUT_ASSIGNMENT AllSatAlgoBase::FilterToProjection(const INPUT_ASSIGNMENT& assignment) const
