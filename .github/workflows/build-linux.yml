@@ -16,14 +16,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Default configuration, the one the tests and benchmarks are run with.
+          # Default configuration, the one benchmarks are run with.
           - ipasir_solver: CADICAL
             gcc: 13
-            run_tests: true
-          # Compilation-only check that the alternative IPASIR backends still build.
+            standalone: true
+          # The alternative IPASIR backend. The tests run here too, they are
+          # solver agnostic and take a couple of seconds.
           - ipasir_solver: MERGESAT
             gcc: 13
-            run_tests: false
+            standalone: false
 
     steps:
       - uses: actions/checkout@v4
@@ -49,12 +50,12 @@ jobs:
           ./build/hall_tool benchmarks/AND.aag /general/print_enumer 1
           ./build/hall_tool benchmarks/XOR.aag /general/print_enumer 1
 
+      # Must run from the repository root, a few tests load files from benchmarks/.
       - name: Run library tests
-        if: matrix.run_tests
         run: ./build/allsat_lib_tests
 
       - name: Build the standalone integration example
-        if: matrix.run_tests
+        if: matrix.standalone
         run: |
           make -C standalone_test
           ./standalone_test/simple_test
