@@ -163,6 +163,8 @@ Consequently, if the projected cube is *empty* while the full cube is not, the p
 - It currently pulls in a few `src/` headers (`AigerMemory.hpp`, `AllSatGloblas.hpp`, `TernaryVal.hpp`), which is why consumers need `src` on the include path in addition to `include`. `target_include_directories(allsat PUBLIC ...)` exports both. If you ever want a truly standalone header, that is the coupling to break.
 - `AigBuilder` builds an `AigerMemory`, which implements `IAigerView`. `AigerParser` implements the same interface, so file-based and in-memory circuits are interchangeable everywhere below the API.
 - Do not throw across the API for expected outcomes — timeouts and exhaustion are statuses, not exceptions.
+- **A reported model never contains `TVal::DontCare`.** Internally the encodings disagree: the dual-rail ones put explicit don't-care entries in the assignment, the Tseitin ones just omit the input. `Enumerator::Next` normalizes that away, because an input that is absent from a cube *is* don't-care, so an explicit entry carries no information. If you add a code path that hands assignments to library users, keep that normalization.
+- Configurations that cannot work must be rejected where the message can still be useful. `litDropConflictLimit` is the worked example: no SAT backend implements `SetConflictLimit`, so `AllSatAlgoBlockingBase`'s constructor rejects a non-zero limit rather than letting it surface as "Function not implemented" halfway through an enumeration.
 
 `standalone_test/` is the smoke test for the "someone links against us from outside CMake" path, and its Makefile documents the required link order (`liballsat.a`, then the SAT solver archives).
 
@@ -240,3 +242,5 @@ These are known and intentionally left alone, listed so nobody rediscovers them 
 - Only single-output circuits are supported, `AigerMemory::SetOutput` and the parser both enforce it.
 - `AllSatAlgoBase::FindAllEnumer` and `InitializeWithAIG*` throw "Function not implemented" in the base class instead of being pure virtual.
 - The blocking algorithms own their solvers and the simulator with raw `new` in the constructor and `delete` in `~AllSatAlgoBlockingBase`, so those classes are neither copyable nor movable in practice.
+- `SetConflictLimit`, and therefore `lit_drop_conflict_limit`, is unimplemented in both solver backends. It is rejected up front (see above). Implementing it would need a backend-specific hook, IPASIR has no conflict limit in its interface.
+- `FixPolarity` and `BoostScore` only exist for IntelSAT. The dual-rail presets call them on the plain solver, so combining one of them with `useIpasirForPlain` throws.

@@ -15,6 +15,16 @@ m_UseTseitinEncForDual(config.dualUseTseitinForDual),
 m_UseIpaisrAsPrimary(config.useIpasirForPlain),
 m_UseIpaisrAsDual(config.useIpasirForDual)
 {
+    // only IntelSAT implements FixPolarity and BoostScore, and the dual-rail presets
+    // apply both to the plain solver. Say so here rather than throwing "Function not
+    // implemented" out of the initialization.
+    if (m_UseIpaisrAsPrimary && (m_DoForcePol || m_DoBoost))
+    {
+        throw runtime_error("Force polarity and boost score are only supported by IntelSAT, "
+                            "they cannot be combined with use_ipasir_for_plain, "
+                            "please disable them or use IntelSAT for the plain instance");
+    }
+
     if (m_UseIpaisrAsPrimary)
     {
         m_Solver = new AllSatSolverIpasir(config, CirEncoding::DUALRAIL_ENC, false);
