@@ -7,12 +7,13 @@ using allsat::Enumerator;
 using allsat::Assignment;
 using allsat::EnumerateStatus;
 
-int main() {
+int main()
+{
     // Build a simple AND gate
     AigBuilder builder;
-    auto a = builder.AddInput();
-    auto b = builder.AddInput();
-    auto out = builder.AddAnd(a, b);
+    AIGLIT a = builder.AddInput();
+    AIGLIT b = builder.AddInput();
+    AIGLIT out = builder.AddAnd(a, b);
     builder.SetOutput(out);
     builder.Validate();
 
@@ -28,15 +29,18 @@ int main() {
 
     Assignment model;
     int count = 0;
-    while (enumerator.Next(model) == EnumerateStatus::Model) {
+    while (enumerator.Next(model) == EnumerateStatus::Model)
+    {
         count++;
         std::cout << "Solution " << count << ": ";
-        for (const auto& [lit, val] : model) {
-            std::cout << (val == TVal::True ? "" : "-") << (lit/2) << " ";
+        for (const auto& [lit, val] : model)
+        {
+            std::cout << (val == TVal::True ? "" : "-") << (lit / 2) << " ";
         }
         std::cout << std::endl;
     }
-    
+
+
     std::cout << "Total solutions: " << count << std::endl;
     return 0;
 }

@@ -145,7 +145,7 @@ Modes are the CLI-visible names, presets are the library-visible enum, and they 
 
 Projection makes HALL enumerate over a subset of the inputs. The implementation is deliberately localized:
 
-- `AllSatAlgoBase::InitializeProjection` validates the requested indices against the circuit inputs and fills `m_ProjectionInputs` / `m_ProjectionSet` (a set of **literals**, for O(1) lookup). It returns `false` on an invalid index and the caller turns that into an exception.
+- `AllSatAlgoBase::InitializeProjection` validates the requested indices against the circuit inputs and fills `m_ProjectionInputs` / `m_ProjectionSet` (a set of **literals**, for O(1) lookup). An index that is not an input throws, and the message names the offending index and lists the valid ones — the diagnostic travels with the exception rather than going to stderr, so the tool and library users both get it.
 - `CirSim` takes an optional projection set and refuses to turn non-projection inputs into don't-cares, so the generalized cube keeps the concrete values that are needed to entail the output.
 - `AllSatSolverBase::GetUnSATCore` takes the same set, and only tries to *drop* projection literals. Non-projection literals are kept in the core: they never take part in the blocking clause, and keeping them gives the drop check a better chance of removing projection literals. To keep the cheap swap-with-back removal valid, the core is first partitioned so the non-droppable literals sit at the front.
 - `BlockModel` blocks `FilterToProjection(model)`, so only projection literals reach the blocking clause. This is what makes the enumeration project: any assignment consistent with the blocked sub-cube is already covered by the reported solution.

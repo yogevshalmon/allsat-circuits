@@ -13,7 +13,6 @@
 #include <iostream>
 #include <random>
 #include <set>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -77,22 +76,6 @@ static EnumerateOptions QuietOptions()
     options.printEnumerations = false;
     return options;
 }
-
-// Swallow stderr for the duration of a scope, for tests that expect a rejection
-// which explains itself on the way out.
-class SilencedCerr
-{
-public:
-    SilencedCerr() : m_Previous(std::cerr.rdbuf(m_Sink.rdbuf())) {}
-    ~SilencedCerr() { std::cerr.rdbuf(m_Previous); }
-
-    SilencedCerr(const SilencedCerr&) = delete;
-    SilencedCerr& operator=(const SilencedCerr&) = delete;
-
-private:
-    std::ostringstream m_Sink;
-    std::streambuf* m_Previous;
-};
 
 // Evaluate an AIG under a total assignment to its inputs.
 // inputValues[i] is the value of aig.GetInputs()[i].
@@ -608,20 +591,23 @@ static void TestInvalidProjectionIndexIsRejected()
     options.projectionIndices = {3};
 
     Enumerator enumerator(options);
-    bool threw = false;
+    std::string message;
+    try
     {
-        // the rejection also explains itself on stderr, keep that out of the test output
-        SilencedCerr silenced;
-        try
-        {
-            enumerator.Initialize(builder.GetView());
-        }
-        catch (const std::exception&)
-        {
-            threw = true;
-        }
+        enumerator.Initialize(builder.GetView());
     }
-    Require(threw, "Projecting onto a non-input index must be rejected");
+    catch (const std::exception& ex)
+    {
+        message = ex.what();
+    }
+
+    Require(!message.empty(), "Projecting onto a non-input index must be rejected");
+    // the diagnostic has to travel with the exception, a library user has no other
+    // way to find out what was wrong
+    Require(message.find("3") != std::string::npos,
+            "The rejection must name the offending index, got: " + message);
+    Require(message.find("1, 2") != std::string::npos,
+            "The rejection must list the valid input indices, got: " + message);
 }
 
 // AigBuilder is the entry point library users touch first, its guard rails must hold.

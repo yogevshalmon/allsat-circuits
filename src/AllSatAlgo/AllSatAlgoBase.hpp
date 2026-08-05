@@ -119,8 +119,8 @@ class AllSatAlgoBase
         bool IsProjectionVar(AIGLIT lit) const;
         
         // initialize projection from a list of indices
-        // returns false if any index is invalid
-        bool InitializeProjection(const std::vector<AIGINDEX>& projectionIndices);
+        // throws with the offending index and the valid ones if any index is not an input
+        void InitializeProjection(const std::vector<AIGINDEX>& projectionIndices);
         
         // filter assignment to only include projection variables
         INPUT_ASSIGNMENT FilterToProjection(const INPUT_ASSIGNMENT& assignment) const;

@@ -79,17 +79,20 @@ set_property(CACHE IPASIR_SAT_SOLVER PROPERTY STRINGS CADICAL CRYPTOMINISAT MERG
 # TODO only src use part path with include
 include_directories(src)
 
-# Find source files
-file(GLOB_RECURSE SOURCES src/main.cpp src/*/*.cpp src/*/*.hpp)
+# Find source files, everything but main.cpp is the engine
+# (the glob below deliberately does not match src/main.cpp, which lives one level up)
 file(GLOB_RECURSE LIB_SOURCES src/*/*.cpp src/*/*.hpp)
 
-# Build executable with aiger
-add_executable(hall_tool ${SOURCES})
-target_include_directories(hall_tool PRIVATE ${CMAKE_SOURCE_DIR}/include)
-
-# Build static library for integration
+# Build the engine once, as the static library used for integration
 add_library(allsat STATIC ${LIB_SOURCES})
 target_include_directories(allsat PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+
+# hall_tool is only the command line front end on top of that library, so the engine
+# is not compiled a second time and the two artifacts cannot drift apart.
+# The SAT solver archives reach hall_tool through allsat's PUBLIC link interface,
+# which also preserves their order.
+add_executable(hall_tool src/main.cpp)
+target_link_libraries(hall_tool PRIVATE allsat)
 
 # Include header files
 include_directories(${LIB_PREFIX}/intel_sat_solver) 
@@ -133,10 +136,8 @@ if(IPASIR_SAT_SOLVER STREQUAL "CADICAL")
         WORKING_DIRECTORY ${LIB_PREFIX}/sat/cadical
     )
     # Important link cadical before intel_sat_solver since both implement also ipasir and we want cadical to be used not intel_sat_solver
-    target_link_libraries(hall_tool PRIVATE lorina ${LIB_PREFIX}/sat/cadical/build/libcadical.a ${LIB_PREFIX}/intel_sat_solver/libintel_sat_solver.a)
     target_link_libraries(allsat PUBLIC lorina ${LIB_PREFIX}/sat/cadical/build/libcadical.a ${LIB_PREFIX}/intel_sat_solver/libintel_sat_solver.a)
-    # Important link cadical before intel_sat_solver since both implement also ipasir and we want cadical to be used not intel_sat_solver
-    add_dependencies(hall_tool ipasir_sat_solver intel_sat_solver)
+
     add_dependencies(allsat ipasir_sat_solver intel_sat_solver)
 
 
@@ -150,10 +151,8 @@ elseif(IPASIR_SAT_SOLVER STREQUAL "CRYPTOMINISAT")
     # include all the sat directory should be apllied to all but only cryptominisat have cmake.
     add_subdirectory(${CRYPTOMINISAT_LIB_PREFIX})
 
-    target_link_libraries(hall_tool PRIVATE lorina ipasircryptominisat5 ${LIB_PREFIX}/intel_sat_solver/libintel_sat_solver.a)
     target_link_libraries(allsat PUBLIC lorina ipasircryptominisat5 ${LIB_PREFIX}/intel_sat_solver/libintel_sat_solver.a)
 
-    add_dependencies(hall_tool intel_sat_solver)
     add_dependencies(allsat intel_sat_solver)
 
 elseif(IPASIR_SAT_SOLVER STREQUAL "MERGESAT")
@@ -181,19 +180,15 @@ elseif(IPASIR_SAT_SOLVER STREQUAL "MERGESAT")
         WORKING_DIRECTORY ${LIB_PREFIX}/sat/mergesat
     )
     
-    target_link_libraries(hall_tool PRIVATE lorina ${LIB_PREFIX}/sat/mergesat/build/release/lib/libmergesat.a ${LIB_PREFIX}/intel_sat_solver/libintel_sat_solver.a)
     target_link_libraries(allsat PUBLIC lorina ${LIB_PREFIX}/sat/mergesat/build/release/lib/libmergesat.a ${LIB_PREFIX}/intel_sat_solver/libintel_sat_solver.a)
 
-    add_dependencies(hall_tool ipasir_sat_solver intel_sat_solver)
     add_dependencies(allsat ipasir_sat_solver intel_sat_solver)
 
 else() # default only intel_sat_solver
     message(STATUS "${BoldBlue}Do not use IPASIR SAT solver${ColourReset}")
 
-    target_link_libraries(hall_tool PRIVATE lorina ${LIB_PREFIX}/intel_sat_solver/libintel_sat_solver.a)
     target_link_libraries(allsat PUBLIC lorina ${LIB_PREFIX}/intel_sat_solver/libintel_sat_solver.a)
 
-    add_dependencies(hall_tool intel_sat_solver)
     add_dependencies(allsat intel_sat_solver)
 endif()
 

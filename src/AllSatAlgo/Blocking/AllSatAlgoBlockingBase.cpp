@@ -64,14 +64,8 @@ void AllSatAlgoBlockingBase::InitializeFromAiger(const IAigerView& aiger)
     m_Inputs = aiger.GetInputs();
     m_InputSize = m_Inputs.size();
 
-    // Initialize projection if specified
-    if (!m_ProjectionIndices.empty())
-    {
-        if (!InitializeProjection(m_ProjectionIndices))
-        {
-            throw runtime_error("Failed to initialize projection variables");
-        }
-    }
+    // Initialize projection if specified, throws if an index is not a circuit input
+    InitializeProjection(m_ProjectionIndices);
 
     // initilize tersim if needed
     if (m_UseCirSim)
