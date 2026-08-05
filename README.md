@@ -14,13 +14,20 @@ The solutions returned by HALL can be either disjoint (no overlap) or non-disjoi
 
 HALL implements different algorithms, please check [**HALL algorithms**](#hall-algorithms) for more details.
 
-For information on how to repoduce the experiments in our SAT'24 submission Dror Fried, Alexander Nadel, Roberto Sebastiani, Yogev Shalmon, "Entailing Generalization Boosts Enumeration", see: [**Reproducing the experiments in our SAT'24 submission**](#reproducing-the-experiments-in-our-sat24-submission)
+HALL can enumerate over all the circuit inputs or over a chosen subset of them, please check [**Projected enumeration**](#projected-enumeration).
+
+HALL can be used either as a command-line tool or as a C++ library, please check [**Library usage**](#library-usage).
+
+If you would like to work on HALL itself, please check [DEVELOPING.md](DEVELOPING.md).
+
+For information on how to repoduce the experiments in our SAT'24 paper Dror Fried, Alexander Nadel, Roberto Sebastiani, Yogev Shalmon, "Entailing Generalization Boosts Enumeration", see: [**Reproducing the experiments in our SAT'24 paper**](#reproducing-the-experiments-in-our-sat24-paper)
 
 ## How to build HALL
 
 Please consider the following before continuing: 
 - Compilation requires g++ version 10.1.0 or higher.
-- We use CMake for building the tool, please verify that you have CMake VERSION 3.8 or higher.
+- We use CMake for building the tool, please verify that you have CMake VERSION 3.10 or higher.
+- HALL is developed and tested on Linux.
 
 To build the tool, just clone the repository and run this commands(after entering the repository directory)
 
@@ -34,7 +41,9 @@ make
 
 This will create new folder named "**build**" and will compile the tool in release mode.
 
-this should generate the tool **hall_tool**.
+This should generate two artifacts under "build":
+- **hall_tool** - the command-line tool.
+- **liballsat.a** - a static library exposing the same enumeration engine, see [**Library usage**](#library-usage).
 
 After building the tool in the "build" directory, you should be able to run the tool, for example ask for help:
 
@@ -97,35 +106,85 @@ The following command reproduces this result by running HALL with the AIGER file
 ./hall_tool ../benchmarks/AND.aag /general/print_enumer 1
 ```
 
+## Projected enumeration
+
+By default HALL enumerates over **all** the circuit inputs. It can also enumerate over a **subset** of the inputs, that is, project the solutions onto a chosen set of inputs. Every solution is then a ternary assignment to the projection inputs only, and the remaining inputs are existentially quantified away: a projected solution is reported when *some* assignment to the remaining inputs entails the output.
+
+The projection inputs are specified by their AIGER *index* (recall that HALL represents variables by their index, so the input with AIGER literal 2 has index 1), as a comma-separated list:
+
+```
+./hall_tool ../benchmarks/AND.aag /general/print_enumer 1 /general/projection_vars 1
+```
+
+For the AND gate above this reports the single solution "1", that is, a = 1 (which is entailing since a = 1 together with b = 1 entails the output).
+
+Please note:
+- Every index must refer to an actual circuit input, otherwise HALL exits with an error listing the valid indices.
+- Duplicated indices are ignored.
+- An empty list means no projection, that is, enumeration over all inputs.
+- The reported statistics (number of assignments, number of models, average cardinality) are all computed with respect to the projection inputs.
+
+Projection is supported by all the [**HALL algorithms**](#hall-algorithms).
+
 ## Library usage
 
-You can also use HALL as a C++ library. Presets provide baseline configurations and can be overridden per option:
+You can also use HALL as a C++ library through **liballsat.a** and the public header `include/allsat/AllSatLib.hpp`. The library lets you build a circuit in memory (no AIGER file needed) and pull the solutions one at a time, instead of having the tool print all of them.
+
+Presets (`EnumerateOptions::Preset`) correspond to the command-line modes and provide the baseline configuration, every individual option can then be overridden on top of the preset:
 
 ```cpp
 #include "allsat/AllSatLib.hpp"
 
 using allsat::AigBuilder;
+using allsat::Assignment;
 using allsat::EnumerateOptions;
+using allsat::EnumerateStatus;
 using allsat::Enumerator;
 
+// build the circuit "out = a & b" in memory
 AigBuilder builder;
-auto a = builder.AddInput();
-auto b = builder.AddInput();
-auto out = builder.AddAnd(a, b);
+AIGLIT a = builder.AddInput();
+AIGLIT b = builder.AddInput();
+AIGLIT out = builder.AddAnd(a, b);
 builder.SetOutput(out);
 builder.Validate();
 
 EnumerateOptions options;
 options.preset = EnumerateOptions::Preset::Roc;
-options.useUcore = false; // override the preset
+options.useUcore = false;          // override a single option of the preset
 options.useTimeout = true;
 options.timeoutSeconds = 60;
-options.projectionIndices = {1, 3, 5};
-options.printInfo = false;
+options.printInfo = false;         // silence the informational "c ..." messages
+options.projectionIndices = {1};   // optional, enumerate over input "a" only
 
 Enumerator enumerator(options);
 enumerator.Initialize(builder.GetView());
+
+Assignment model;
+EnumerateStatus status;
+while ((status = enumerator.Next(model)) == EnumerateStatus::Model)
+{
+    for (const auto& [lit, val] : model)
+    {
+        std::cout << (val == TVal::True ? "" : "-") << (lit / 2) << " ";
+    }
+    std::cout << std::endl;
+}
+// status is now Exhausted, Timeout or Tautology
 ```
+
+`Enumerator::Next` returns:
+
+- `EnumerateStatus::Model` - a new solution was written to `model` (a vector of (AIGER literal, ternary value) pairs, don't-care inputs are not listed).
+- `EnumerateStatus::Tautology` - the circuit (or its projection) is entailed by the empty assignment, `model` is empty. The following call returns `Exhausted`.
+- `EnumerateStatus::Exhausted` - all the solutions were enumerated.
+- `EnumerateStatus::Timeout` - the configured timeout was reached.
+
+`Enumerator::GetStats` returns the same counters the tool prints at the end of a run.
+
+An existing AIGER file can be enumerated through the library as well, by parsing it with `AigerParser` and passing the parser to `Initialize` (both `AigerParser` and `AigBuilder`'s view implement the `IAigerView` interface).
+
+To link against the library, build the `allsat` target and add both `include` and `src` to your include path (the public header uses a handful of types from `src`, such as `AIGLIT` and `TVal`). A complete, self-contained example including a Makefile is provided under [standalone_test](standalone_test/).
 
 ### Disjoint vs. non-disjoint solutions
 
@@ -180,9 +239,9 @@ non-disjoint solutions algorithms:
 - roc
 - carma
 
-## Reproducing the experiments in our SAT'24 submission
+## Reproducing the experiments in our SAT'24 paper
 
-This section lays out how to reproduce the experiments, reported in Tables 1 and 2 in our SAT'24 submission.
+This section lays out how to reproduce the experiments, reported in Tables 1 and 2 in our SAT'24 paper.
 
 ### Benchmarks
 
@@ -244,4 +303,4 @@ To get the "No-UC-Minimization" configuration, please use the mode "core" in the
 
 HALL is introduced in the following paper: Dror Fried, Alexander Nadel, Yogev Shalmon, "AllSAT for Combinational Circuits", [SAT2023](http://satisfiability.org/SAT23/index.html).
 
-Additional developments are described in our current SAT'24 accepted paper: Dror Fried, Alexander Nadel, Roberto Sebastiani, Yogev Shalmon, "Entailing Generalization Boosts Enumeration".
+Additional developments are described in: Dror Fried, Alexander Nadel, Roberto Sebastiani, Yogev Shalmon, "Entailing Generalization Boosts Enumeration", in 27th International Conference on Theory and Applications of Satisfiability Testing (SAT 2024), LIPIcs volume 305, pages 13:1-13:14, Schloss Dagstuhl - Leibniz-Zentrum für Informatik, 2024. [DOI:10.4230/LIPIcs.SAT.2024.13](https://doi.org/10.4230/LIPIcs.SAT.2024.13) ([PDF](https://drops.dagstuhl.de/storage/00lipics/lipics-vol305-sat2024/LIPIcs.SAT.2024.13/LIPIcs.SAT.2024.13.pdf)).
