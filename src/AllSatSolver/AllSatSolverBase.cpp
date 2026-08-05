@@ -294,8 +294,10 @@ INPUT_ASSIGNMENT AllSatSolverBase::GetUnSATCore(const INPUT_ASSIGNMENT& initialV
 
         // iterating from back to begin to support remove and iteration of vector
         // litDropAsmpForSolver and coreValues agree on every position <= assumpIndex,
-        // the tail beyond it only gets permuted, so indexes stay valid for both
-        for (int assumpIndex = litDropAsmpForSolver.size() - 1; assumpIndex >= (int)firstDroppable; --assumpIndex)
+        // the tail beyond it only gets permuted, so indexes stay valid for both.
+        // the core is empty when the dual instance is UNSAT on its own, which is the
+        // tautology case, so cast before subtracting and let the loop be skipped
+        for (int assumpIndex = (int)litDropAsmpForSolver.size() - 1; assumpIndex >= (int)firstDroppable; --assumpIndex)
         {
             // Temporary store the current assump lit
             SATLIT tempLit = litDropAsmpForSolver[assumpIndex];
