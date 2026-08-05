@@ -1,0 +1,60 @@
+name: Build and test (Linux)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.ipasir_solver }} / g++-${{ matrix.gcc }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Default configuration, the one the tests and benchmarks are run with.
+          - ipasir_solver: CADICAL
+            gcc: 13
+            run_tests: true
+          # Compilation-only check that the alternative IPASIR backends still build.
+          - ipasir_solver: MERGESAT
+            gcc: 13
+            run_tests: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-${{ matrix.gcc }} cmake make
+
+      - name: Configure
+        env:
+          CC: gcc-${{ matrix.gcc }}
+          CXX: g++-${{ matrix.gcc }}
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DIPASIR_SAT_SOLVER=${{ matrix.ipasir_solver }}
+
+      - name: Build
+        run: cmake --build build -j$(nproc)
+
+      - name: Smoke test the CLI
+        run: |
+          ./build/hall_tool benchmarks/AND.aag /general/print_enumer 1
+          ./build/hall_tool benchmarks/XOR.aag /general/print_enumer 1
+
+      - name: Run library tests
+        if: matrix.run_tests
+        run: ./build/allsat_lib_tests
+
+      - name: Build the standalone integration example
+        if: matrix.run_tests
+        run: |
+          make -C standalone_test
+          ./standalone_test/simple_test
