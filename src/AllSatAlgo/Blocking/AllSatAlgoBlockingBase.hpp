@@ -43,7 +43,9 @@ class AllSatAlgoBlockingBase : public AllSatAlgoBase
         // print initial information, timeout etc..
         virtual void PrintInitialInformation();
 
-        void InitializeFromAiger(const IAigerView& aiger);
+        // common initialization for both the file based and the in-memory entry points,
+        // override this rather than the entry points themselves
+        virtual void InitializeFromAiger(const IAigerView& aiger);
         
         INPUT_ASSIGNMENT GeneralizeWithCirSimulation(const INPUT_ASSIGNMENT& model);
 

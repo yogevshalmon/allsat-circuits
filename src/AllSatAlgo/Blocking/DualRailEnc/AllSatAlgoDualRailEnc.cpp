@@ -42,40 +42,16 @@ AllSatAlgoDualRailEnc::~AllSatAlgoDualRailEnc()
 
 }
 
-void AllSatAlgoDualRailEnc::InitializeWithAIGFile(const string& filename)
+void AllSatAlgoDualRailEnc::InitializeFromAiger(const IAigerView& aiger)
 {
-    AllSatAlgoBlockingBase::InitializeWithAIGFile(filename);
+    AllSatAlgoBlockingBase::InitializeFromAiger(aiger);
 
     for (AIGLIT inputLit: m_Inputs)
     {
         DRVAR inpurDr =  AIGLitToDR(inputLit);
         // the fix polarity make max-sat approximation
         if (m_DoForcePol)
-        {                  
-            m_Solver->FixPolarity(-GetPos(inpurDr));
-            m_Solver->FixPolarity(-GetNeg(inpurDr));
-        }
-
-        // and bump score
-        if (m_DoBoost)
         {
-            m_Solver->BoostScore(abs(GetPos(inpurDr)));
-            m_Solver->BoostScore(abs(GetNeg(inpurDr)));
-        }
-    }
-
-}
-
-void AllSatAlgoDualRailEnc::InitializeWithAIG(const IAigerView& aiger)
-{
-    AllSatAlgoBlockingBase::InitializeWithAIG(aiger);
-
-    for (AIGLIT inputLit: m_Inputs)
-    {
-        DRVAR inpurDr =  AIGLitToDR(inputLit);
-        // the fix polarity make max-sat approximation
-        if (m_DoForcePol)
-        {                  
             m_Solver->FixPolarity(-GetPos(inpurDr));
             m_Solver->FixPolarity(-GetNeg(inpurDr));
         }
@@ -127,7 +103,7 @@ INPUT_ASSIGNMENT AllSatAlgoDualRailEnc::GeneralizeModel(const INPUT_ASSIGNMENT& 
     }
     if (m_UseDualSolver)
     {
-        // Pass projection set to prioritize keeping projection vars in core
+        // pass the projection set so only the projection literals are dropped from the core
         generalizeModel = m_DualSolver->GetUnSATCore(generalizeModel, m_UseLitDrop, m_LitDropConflictLimit, m_LitDropChekRecurCore,
                                                      m_UseProjection ? &m_ProjectionSet : nullptr);
     }

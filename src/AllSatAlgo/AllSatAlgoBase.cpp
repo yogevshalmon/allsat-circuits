@@ -18,12 +18,12 @@ m_TimeOut(config.timeoutSeconds),
 // projection is disabled by default
 m_UseProjection(false),
 m_AigView(nullptr),
-m_NumberOfAssg(0), 
-m_NumberOfModels(0), 
-m_IsTimeOut(false), 
+m_ProjectionSize(0),
+m_NumberOfAssg(0),
+m_NumberOfModels(0),
+m_IsTimeOut(false),
 m_TimeOnGeneralization(0),
-m_DontCarePrecSum(0),
-m_ProjectionSize(0)
+m_DontCarePrecSum(0)
 {
     m_Clk = clock();
 }
