@@ -1,6 +1,8 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "lorina/aiger.hpp"
 
@@ -217,8 +219,6 @@ static void TestPartialModelEnumeration()
     builder.SetOutput(out);
     builder.Validate();
 
-    std::cout << "Testing partial model enumeration with projection onto {a, c} " << a << ", " << c << std::endl;
-
     EnumerateOptions options;
     options.printInfo = false;
     options.printEnumerations = false;
@@ -232,13 +232,6 @@ static void TestPartialModelEnumeration()
     Require(status == EnumerateStatus::Model, "Expected one projected model");
     Require(model.size() == 2, "Projected model must contain only a and c, not b");
 
-    // print the model we got back for debugging
-    std::cout << "Projected model: ";
-    for (const auto& [lit, val] : model)
-    {
-        std::cout << (val == TVal::True ? "" : "-") << (lit/2) << " ";   
-    }
-    std::cout << std::endl;
     bool foundA = false, foundC = false;
     for (const auto& entry : model)
     {
@@ -262,6 +255,123 @@ static void TestPartialModelEnumeration()
 
     status = enumerator.Next(model);
     Require(status == EnumerateStatus::Exhausted, "Expected exhausted after one projected model");
+}
+
+// The 13 inputs of the regression circuit below, followed by its 50 AND gates given as
+// (left literal, right literal). Gates are added in order, so gate i gets AIG index
+// 13 + 1 + i, which is what the literals below refer to.
+static const unsigned kRegressionInputCount = 13;
+static const unsigned kRegressionOutputLit = 126;
+static const unsigned kRegressionGates[][2] = {
+    {27, 24}, {14, 14}, {12, 11}, {32, 30}, {11, 6}, {28, 19},
+    {9, 5}, {34, 40}, {2, 38}, {25, 28}, {41, 47}, {39, 41},
+    {10, 39}, {0, 53}, {33, 4}, {3, 2}, {12, 56}, {15, 38},
+    {3, 59}, {41, 56}, {25, 66}, {29, 37}, {63, 0}, {10, 58},
+    {35, 52}, {70, 10}, {32, 40}, {29, 65}, {36, 3}, {8, 72},
+    {13, 51}, {13, 37}, {49, 8}, {2, 87}, {0, 27}, {26, 6},
+    {60, 48}, {90, 50}, {53, 9}, {72, 80}, {25, 99}, {86, 34},
+    {43, 11}, {39, 42}, {1, 52}, {97, 15}, {17, 31}, {90, 12},
+    {1, 7}, {59, 102}
+};
+
+// Evaluate the regression circuit under a total assignment to its inputs.
+// values[index] holds the value of input index (1 based), other indices are computed.
+static bool EvaluateRegressionCircuit(const std::vector<bool>& inputValues)
+{
+    const size_t numGates = sizeof(kRegressionGates) / sizeof(kRegressionGates[0]);
+    std::vector<bool> indexValue(kRegressionInputCount + numGates + 1, false);
+    for (size_t i = 0; i < kRegressionInputCount; ++i)
+    {
+        indexValue[i + 1] = inputValues[i];
+    }
+
+    auto litValue = [&indexValue](unsigned lit) -> bool
+    {
+        if (lit == 0) return false;
+        if (lit == 1) return true;
+        bool value = indexValue[lit >> 1];
+        return (lit & 1) ? !value : value;
+    };
+
+    for (size_t i = 0; i < numGates; ++i)
+    {
+        indexValue[kRegressionInputCount + 1 + i] =
+            litValue(kRegressionGates[i][0]) && litValue(kRegressionGates[i][1]);
+    }
+
+    return litValue(kRegressionOutputLit);
+}
+
+// Regression test for unsat-core literal dropping with recursive core extraction.
+// The recursive check asks the solver which assumptions were required, by position in
+// the vector that was last solved under. Indexing a *different* vector there drops
+// literals that are actually required, and the resulting cubes no longer entail the
+// output. On this circuit that produced 128 assignments that do not satisfy it.
+//
+// Every reported cube is checked exactly, by completing the don't-care inputs in all
+// possible ways and evaluating the circuit on each completion.
+static void TestRecursiveUnsatCoreKeepsRequiredLiterals()
+{
+    AigBuilder builder;
+    std::vector<AIGLIT> inputs;
+    for (unsigned i = 0; i < kRegressionInputCount; ++i)
+    {
+        inputs.push_back(builder.AddInput());
+    }
+    for (const auto& gate : kRegressionGates)
+    {
+        builder.AddAnd(gate[0], gate[1]);
+    }
+    builder.SetOutput(kRegressionOutputLit);
+    builder.Validate();
+
+    EnumerateOptions options;
+    options.printInfo = false;
+    options.printEnumerations = false;
+    options.useUcore = true;
+    options.useLitDrop = true;
+    options.useLitDropRecur = true;
+
+    Enumerator enumerator(options);
+    enumerator.Initialize(builder.GetView());
+
+    Assignment model;
+    size_t numCubes = 0;
+    while (enumerator.Next(model) == EnumerateStatus::Model)
+    {
+        ++numCubes;
+
+        // positions of the inputs left as don't-care by this cube
+        std::vector<bool> assigned(kRegressionInputCount, false);
+        std::vector<bool> value(kRegressionInputCount, false);
+        for (const auto& [lit, val] : model)
+        {
+            AIGINDEX index = AIGLitToAIGIndex(lit);
+            Require(index >= 1 && index <= kRegressionInputCount, "Model contains a non-input literal");
+            assigned[index - 1] = true;
+            value[index - 1] = (val == TVal::True);
+        }
+
+        std::vector<size_t> freePositions;
+        for (size_t i = 0; i < kRegressionInputCount; ++i)
+        {
+            if (!assigned[i]) freePositions.push_back(i);
+        }
+
+        // the cube must entail the output, that is, every completion satisfies the circuit
+        for (unsigned long long mask = 0; mask < (1ull << freePositions.size()); ++mask)
+        {
+            std::vector<bool> completion = value;
+            for (size_t b = 0; b < freePositions.size(); ++b)
+            {
+                completion[freePositions[b]] = ((mask >> b) & 1ull) != 0;
+            }
+            Require(EvaluateRegressionCircuit(completion),
+                    "Reported cube does not entail the output, a required literal was dropped from the unSAT core");
+        }
+    }
+
+    Require(numCubes > 0, "Expected at least one model for the regression circuit");
 }
 
 static void TestTimeoutStatus()
@@ -298,6 +408,7 @@ int main()
         TestPresetOverride();
         TestNonConsecutiveInputs();
         TestPartialModelEnumeration();
+        TestRecursiveUnsatCoreKeepsRequiredLiterals();
         TestTimeoutStatus();
     }
     catch (const std::exception& ex)
