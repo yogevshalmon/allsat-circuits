@@ -55,7 +55,7 @@ INPUT_ASSIGNMENT AllSatAlgoTseitinEnc::GeneralizeModel(const INPUT_ASSIGNMENT& m
     }
     if (m_UseDualSolver)
     {
-        // Pass projection set to prioritize keeping projection vars in core
+        // pass the projection set so only the projection literals are dropped from the core
         generalizeModel = m_DualSolver->GetUnSATCore(generalizeModel, m_UseLitDrop, m_LitDropConflictLimit, m_LitDropChekRecurCore,
                                                      m_UseProjection ? &m_ProjectionSet : nullptr);
     }
