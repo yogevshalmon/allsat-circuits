@@ -1,6 +1,8 @@
 [submodule "libs/intel_sat_solver"]
 	path = libs/intel_sat_solver
 	url = https://github.com/alexander-nadel/intel_sat_solver.git
+	# the solver is built in place, ignore the build artifacts it leaves behind
+	ignore = untracked
 [submodule "libs/lorina"]
 	path = libs/lorina
 	url = https://github.com/hriener/lorina.git
