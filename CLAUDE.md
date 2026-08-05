@@ -60,7 +60,7 @@ The highest-value tests are the brute-force ones: for a circuit small enough to 
 
 Helpers available: `EvaluateCircuit`, `BruteForceSolutions`, `Enumerate`, `ExpandCubes`, `CheckAgainstBruteForce`, `QuietOptions`, `SilencedCerr`.
 
-CI (`.github/workflows/build-linux.yml`) builds CaDiCaL and MergeSAT configurations, runs the tests on both, smoke-tests the CLI, and builds the standalone example. Linux only — Windows support was removed deliberately.
+CI (`.github/workflows/build-linux.yml`) builds the default CaDiCaL configuration, runs the tests, smoke-tests the CLI, and builds the standalone example. Linux only — Windows support was removed deliberately. The other IPASIR backends are not in CI yet: MergeSAT fails to link because `libintel_sat_solver.a` ships a `Main.o` defining `main`, which collides with ours under that link order.
 
 ## Conventions
 
