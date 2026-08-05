@@ -209,7 +209,23 @@ git -C libs/sat/cadical fetch --tags && git -C libs/sat/cadical checkout <tag>
 git add libs/sat/cadical
 ```
 
-then rebuild from scratch and re-run the performance protocol above before committing the bump. CaDiCaL major versions have broken the API before, so a bump is never a formality.
+then rebuild from scratch and re-run the performance protocol above before committing the bump. A bump is never a formality.
+
+### Why CaDiCaL is pinned to rel-2.0.0
+
+**Do not bump CaDiCaL without re-measuring.** CaDiCaL is only used for the dual instance, and the unsat-core based modes hammer it with a large number of incremental `solve` calls under slowly shrinking assumption sets. Newer CaDiCaL is markedly slower on exactly that pattern. Measured on this repository's benchmarks, at a fixed 20 second budget and holding everything else constant:
+
+| Step | Geomean throughput | Worst case |
+| --- | --- | --- |
+| 2.0.0 -> 2.2.1 | 0.87 | 0.25 |
+| 2.2.1 -> 3.0.1 | 0.98 | 0.81 |
+| 2.0.0 -> 3.0.1 | **0.84** | **0.22** |
+
+Broken down per mode for 2.0.0 -> 3.0.1: `roc` 0.64, `core` 0.80, `carma` 0.85, versus `tale` 0.99 and `mars-nondis` 0.97. The loss falls entirely on the modes that use the dual solver, which is the fingerprint of the incremental workload rather than of anything in our code.
+
+This is not the `factor`/BVA default (CaDiCaL's own `ipasir_init` already disables it) and it is not recoverable by turning off the inprocessing that is new since 2.0.0 — explicitly disabling `congruence`, `sweep`, `backbone`, `inprobing` and `fastelim` changed nothing. It is also not a generalization-quality effect: average cardinality is unchanged across versions (~0.41 on the affected benchmarks), the solver simply gets through fewer cubes per second.
+
+By contrast, bumping `intel_sat_solver` to its current upstream tip measured at 1.02 geomean and is fine.
 
 ## Continuous integration
 
