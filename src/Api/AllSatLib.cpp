@@ -109,6 +109,22 @@ void Enumerator::Initialize(const IAigerView& aiger)
     m_Algo->BeginEnumeration(false);
 }
 
+// Every input that is not listed is don't-care, so an explicit don't-care entry carries
+// no information. The encodings disagree on whether they produce one (the dual-rail ones
+// do, the Tseitin ones do not), so normalize here and give library users one contract.
+static void CopyAssignedOnly(const INPUT_ASSIGNMENT& model, Assignment& outModel)
+{
+    outModel.clear();
+    outModel.reserve(model.size());
+    for (const std::pair<AIGLIT, TVal>& assign : model)
+    {
+        if (assign.second == TVal::True || assign.second == TVal::False)
+        {
+            outModel.push_back(assign);
+        }
+    }
+}
+
 EnumerateStatus Enumerator::Next(Assignment& outModel)
 {
     if (!m_Algo)
@@ -120,12 +136,12 @@ EnumerateStatus Enumerator::Next(Assignment& outModel)
     AllSatAlgoBlockingBase::StepStatus res = m_Algo->NextModel(model);
     if (res == AllSatAlgoBlockingBase::StepStatus::Model)
     {
-        outModel = model;
+        CopyAssignedOnly(model, outModel);
         return EnumerateStatus::Model;
     }
     if (res == AllSatAlgoBlockingBase::StepStatus::Tautology)
     {
-        outModel = model;
+        CopyAssignedOnly(model, outModel);
         return EnumerateStatus::Tautology;
     }
     if (res == AllSatAlgoBlockingBase::StepStatus::Timeout)

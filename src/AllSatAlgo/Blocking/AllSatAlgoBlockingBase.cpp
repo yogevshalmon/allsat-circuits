@@ -25,6 +25,15 @@ m_CirSimulation(nullptr),
 m_EnumerationStarted(false),
 m_PendingSolveStatus(UNSAT_RET_STATUS)
 {
+    // no SAT solver backend implements SetConflictLimit, so a non-zero limit would only
+    // surface as "Function not implemented" in the middle of the enumeration. Fail here
+    // instead, where the message can say what is actually wrong.
+    if (m_LitDropConflictLimit > 0)
+    {
+        throw runtime_error("Conflict limited literal dropping is not supported: "
+                            "no SAT solver backend implements a conflict limit, "
+                            "please leave lit_drop_conflict_limit at 0");
+    }
 }
 
 AllSatAlgoBlockingBase::~AllSatAlgoBlockingBase() 
