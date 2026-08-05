@@ -1026,6 +1026,48 @@ static void TestParsedFileMatchesInMemory()
     }
 }
 
+// When the circuit is a tautology the dual instance is UNSAT on its own, so no
+// assumption is required and GetUnSATCore ends up running its literal dropping loop
+// over an empty core. That is the one case where the loop bound is computed from a
+// zero size, so pin it with a small circuit rather than only reaching it incidentally
+// through the 60 input benchmark below.
+static void TestEmptyUnsatCoreOnTautology()
+{
+    AigBuilder builder;
+    AIGLIT a = builder.AddInput();
+    AIGLIT b = builder.AddInput();
+    // out = a OR NOT a, true for every assignment, with b unused
+    AIGLIT out = AigBuilder::Neg(builder.AddAnd(AigBuilder::Neg(a), a));
+    builder.SetOutput(out);
+    builder.Validate();
+    (void)b;
+
+    for (EnumerateOptions::Preset preset : {EnumerateOptions::Preset::Core,
+                                            EnumerateOptions::Preset::Roc,
+                                            EnumerateOptions::Preset::Carma})
+    {
+        EnumerateOptions options = QuietOptions();
+        options.preset = preset;
+        options.useLitDrop = true;
+
+        Enumerator enumerator(options);
+        enumerator.Initialize(builder.GetView());
+
+        const std::string where = std::string("[") + PresetName(preset) + "]";
+
+        Assignment model;
+        EnumerateStatus status = enumerator.Next(model);
+        Require(status == EnumerateStatus::Tautology, where + ": expected a tautology");
+        Require(model.empty(), where + ": a tautology must report an empty cube");
+        Require(enumerator.Next(model) == EnumerateStatus::Exhausted,
+                where + ": expected exhausted after the tautology");
+
+        // the whole 2^2 input space, covered by that single empty cube
+        Require(enumerator.GetStats().numberOfModels == 4,
+                where + ": expected the tautology to cover the whole input space");
+    }
+}
+
 // A real 60 input benchmark, for the scale the toy circuits above cannot reach.
 // benchmarks/iscas85/or/c880 ORs all of c880's outputs together, which makes it a
 // tautology, so the whole 2^60 input space is one solution. The unSAT-core modes
@@ -1203,6 +1245,7 @@ static const TestCase kTests[] = {
     {"stats are consistent", TestStatsAreConsistent},
     {"random circuits vs brute force", TestRandomCircuitsAgainstBruteForce},
     {"non default options vs brute force", TestNonDefaultOptionsAgainstBruteForce},
+    {"empty unsat core on tautology", TestEmptyUnsatCoreOnTautology},
     {"parsed file matches in memory", TestParsedFileMatchesInMemory},
     {"real benchmark tautology", TestRealBenchmarkTautology},
     {"recursive unsat core keeps required literals", TestRecursiveUnsatCoreKeepsRequiredLiterals},
