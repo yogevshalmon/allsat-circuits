@@ -231,7 +231,9 @@ By contrast, bumping `intel_sat_solver` to its current upstream tip measured at 
 
 ## Continuous integration
 
-`.github/workflows/build-linux.yml` builds on `ubuntu-latest` for the default CaDiCaL configuration and for MergeSAT, runs the library tests, smoke-tests the CLI on `benchmarks/AND.aag` and `benchmarks/XOR.aag`, and builds the standalone example. It is a compilation and sanity check, not a performance gate — performance is measured locally.
+`.github/workflows/build-linux.yml` builds on `ubuntu-latest` for the default CaDiCaL configuration, runs the library tests, smoke-tests the CLI on `benchmarks/AND.aag` and `benchmarks/XOR.aag`, and builds the standalone example. It is a compilation and sanity check, not a performance gate — performance is measured locally.
+
+Only CaDiCaL is covered for now. `-DIPASIR_SAT_SOLVER=MERGESAT` does not link: `libintel_sat_solver.a` contains a `Main.o` that defines `main`, and with MergeSAT's link order the linker pulls that object in and collides with `src/main.cpp` (and with the test's `main`). CaDiCaL happens to be linked first and never triggers it. Fixing that — most likely by keeping `Main.o` out of the IntelSAT archive, or by linking the archive so the object is not pulled in — is what has to happen before the alternative backends go back into CI.
 
 ## Known rough edges
 
