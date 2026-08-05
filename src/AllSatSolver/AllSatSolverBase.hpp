@@ -91,7 +91,7 @@ class AllSatSolverBase
         // useLitDrop - if to use literal dropping startegy
         // dropt_lit_conflict_limit - limit the conflict limit for each check for drop lit
         // useRecurUnCore - if to use unsat core extraction recursivly with each drop lit check
-        // projectionSet - if provided, prioritize dropping non-projection vars first during lit drop
+        // projectionSet - if provided, only projection vars are candidates for dropping, the other ones are kept in the core
         INPUT_ASSIGNMENT GetUnSATCore(const INPUT_ASSIGNMENT& initialValues, bool useLitDrop = false, int dropt_lit_conflict_limit = -1, bool useRecurUnCore = false,
                                       const std::unordered_set<AIGLIT>* projectionSet = nullptr);
         
@@ -130,6 +130,9 @@ class AllSatSolverBase
 
         // hold if the current solver is dual represntation
         const bool m_IsDual;
+
+        // if to print informational messages, disabled for library usage
+        const bool m_PrintInfo;
 		
         // *** Variables ***
 
