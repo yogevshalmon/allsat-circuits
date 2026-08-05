@@ -1,6 +1,6 @@
 # HALL (Haifa AllSAT) - Project Overview
 
-Full documentation lives in [README.md](../README.md) (usage) and [DEVELOPING.md](../DEVELOPING.md) (architecture, conventions, how to extend the code). Read DEVELOPING.md before making non-trivial changes.
+Full documentation lives in [README.md](../README.md) (usage) and [DEVELOPING.md](../DEVELOPING.md) (architecture, conventions, how to extend the code). Read DEVELOPING.md before making non-trivial changes. [CLAUDE.md](../CLAUDE.md) carries the same guidance in condensed form, including the pitfalls that are easy to hit; prefer it if you only read one file.
 
 ## Purpose
 HALL solves the AllSAT problem for single-output combinational circuits: generates all ternary input assignments (0/1/X don't-care) that entail the circuit output evaluates to 1. It can also enumerate over a subset of the inputs (projected enumeration).
